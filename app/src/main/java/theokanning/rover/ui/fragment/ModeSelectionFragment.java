@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import butterknife.ButterKnife;
 import butterknife.OnClick;
 import theokanning.rover.R;
 import theokanning.rover.ui.activity.DriverActivity;
@@ -32,6 +33,7 @@ public class ModeSelectionFragment extends BaseFragment {
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        ButterKnife.bind(this, view);
     }
 
     @Override
