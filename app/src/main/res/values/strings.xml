@@ -1,4 +1,15 @@
 <resources>
-    <string name="app_name">Base</string>
+    <string name="app_name">Rover</string>
     <string name="action_settings">Settings</string>
+
+    <!-- Mode Selection Fragment -->
+    <string name="mode_selection_title">Select Mode</string>
+    <string name="mode_selection_driver">Driver Mode</string>
+    <string name="mode_selection_robot">Robot Mode</string>
+
+    <string name="title_activity_user">UserActivity</string>
+
+<!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
 </resources>

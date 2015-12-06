@@ -19,8 +19,6 @@ public class BaseApplication extends Application {
                 .baseModule(new BaseModule(this))
                 .build();
         component.inject(this);
-
-
     }
 
     public BaseComponent getComponent() {

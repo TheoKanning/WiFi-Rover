@@ -57,7 +57,7 @@ public class BaseActivity extends AppCompatActivity {
         Log.d(TAG, "showMainScreen()");
 
         // clear the backstack so we this becomes our top-most activity once the user is logged in
-        Intent intent = new Intent(this, MainActivity.class);
+        Intent intent = new Intent(this, ModeSelectionActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
     }
