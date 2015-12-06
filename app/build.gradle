@@ -11,6 +11,10 @@ android {
         targetSdkVersion 23
         versionCode 1
         versionName "1.0"
+
+        resValue "string", "quickblox_app_id", qbAppId
+        resValue "string", "quickblox_auth_key", qbAuthKey
+        resValue "string", "quickblox_auth_secret", qbAuthSecret
     }
     buildTypes {
         release {
