@@ -2,6 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="theokanning.rover" >
 
+    <uses-permission android:name="android.permission.INTERNET"/>
+
     <application
         android:name=".BaseApplication"
         android:allowBackup="true"
@@ -21,7 +23,7 @@
         </activity>
         <activity
             android:name=".ui.activity.DriverActivity"
-            android:label="@string/title_activity_user"
+            android:screenOrientation="landscape"
             android:theme="@style/AppTheme" >
         </activity>
     </application>
