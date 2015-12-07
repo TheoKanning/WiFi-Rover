@@ -1,11 +1,10 @@
 package theokanning.rover.ui.activity;
 
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 
 import theokanning.rover.R;
 import theokanning.rover.ui.fragment.BaseFragment;
@@ -42,7 +41,10 @@ public class BaseActivity extends AppCompatActivity {
             }
         }
 
-        getSupportActionBar().setTitle(fragment.getTitleResourceId());
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            getSupportActionBar().setTitle(fragment.getTitleResourceId());
+        }
     }
 
     public BaseFragment getCurrentFragment() {
@@ -52,14 +54,4 @@ public class BaseActivity extends AppCompatActivity {
     private String getCurrentFragmentName() {
         return getCurrentFragment().getClass().getCanonicalName();
     }
-
-    public void showMainActivity(boolean animate) {
-        Log.d(TAG, "showMainScreen()");
-
-        // clear the backstack so we this becomes our top-most activity once the user is logged in
-        Intent intent = new Intent(this, ModeSelectionActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(intent);
-    }
-
 }
