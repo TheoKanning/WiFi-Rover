@@ -2,7 +2,12 @@ package theokanning.rover.ui.activity;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.Toast;
 
+import com.quickblox.chat.QBChatService;
+import com.quickblox.chat.QBSignaling;
+import com.quickblox.chat.QBWebRTCSignaling;
+import com.quickblox.chat.listeners.QBVideoChatSignalingManagerListener;
 import com.quickblox.videochat.webrtc.QBRTCClient;
 import com.quickblox.videochat.webrtc.QBRTCSession;
 import com.quickblox.videochat.webrtc.callbacks.QBRTCClientSessionCallbacks;
@@ -34,17 +39,28 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
      * Tells the client that this activity is prepared to process calls and sets this activity
      * as a listener for client callback
      */
-    private void initQbrtcClient(){
+    private void initQbrtcClient() {
         QBRTCClient.getInstance(this).prepareToProcessCalls();
         QBRTCClient.getInstance(this).addSessionCallbacksListener(this);
+
+        QBChatService.getInstance().getVideoChatWebRTCSignalingManager()
+                .addSignalingManagerListener(new QBVideoChatSignalingManagerListener() {
+                    @Override
+                    public void signalingCreated(QBSignaling qbSignaling, boolean createdLocally) {
+                        if (!createdLocally) {
+                            QBRTCClient.getInstance(RobotActivity.this).addSignaling((QBWebRTCSignaling) qbSignaling);
+                        }
+                    }
+                });
     }
 
     @Override
     public void onReceiveNewSession(QBRTCSession qbrtcSession) {
 
+        Toast.makeText(this, "Call received", Toast.LENGTH_SHORT).show();
         Log.d(TAG, "Call received");
 
-        Map<String,String> userInfo = new HashMap<>();
+        Map<String, String> userInfo = new HashMap<>();
         userInfo.put("Key", "Robot");
 
         // Accept incoming call
