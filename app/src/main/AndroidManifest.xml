@@ -26,7 +26,9 @@
             android:screenOrientation="landscape"
             android:theme="@style/AppTheme" >
         </activity>
-        <activity android:name=".ui.activity.RobotActivity" >
+        <activity android:name=".ui.activity.RobotActivity"
+            android:screenOrientation="landscape"
+            android:theme="@style/AppTheme">
         </activity>
     </application>
 

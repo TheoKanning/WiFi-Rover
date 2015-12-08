@@ -21,6 +21,7 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import theokanning.rover.R;
 import theokanning.rover.ui.activity.DriverActivity;
+import theokanning.rover.ui.activity.RobotActivity;
 import theokanning.rover.user.User;
 
 /**
@@ -99,8 +100,8 @@ public class ModeSelectionFragment extends BaseFragment {
                     @Override
                     public void onSuccess() {
                         Log.d(TAG, "Robot successfully logged in to chat, starting RobotActivity");
-                        //Intent intent = new Intent(getContext(), DriverActivity.class);
-                        //startActivity(intent);
+                        Intent intent = new Intent(getContext(), RobotActivity.class);
+                        startActivity(intent);
                     }
 
                     @Override

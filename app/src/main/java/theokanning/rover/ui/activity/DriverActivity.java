@@ -52,6 +52,7 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
         userInfo.put("key", "robot");
 
         //Start call
+        Log.d(TAG, "Starting call");
         session.startCall(userInfo);
     }
 
@@ -73,8 +74,8 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
 
     @Override
     public void onCallAcceptByUser(QBRTCSession qbrtcSession, Integer integer, Map<String, String> map) {
-        Toast.makeText(this, "Call started", Toast.LENGTH_SHORT).show();
-        Log.d(TAG, "Call started");
+        Toast.makeText(this, "Connected to robot", Toast.LENGTH_SHORT).show();
+        Log.d(TAG, "Connected successfully");
         //TODO start control fragment here
     }
 
