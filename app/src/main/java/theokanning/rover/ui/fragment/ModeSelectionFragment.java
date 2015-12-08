@@ -46,7 +46,9 @@ public class ModeSelectionFragment extends BaseFragment {
 
                 driver.setId(result.getUserId());
 
-                QBChatService.init(getContext());
+                if(!QBChatService.isInitialized()) {
+                    QBChatService.init(getContext());
+                }
                 QBChatService chatService = QBChatService.getInstance();
 
                 chatService.login(driver, new QBEntityCallbackImpl<QBUser>() {
@@ -78,17 +80,43 @@ public class ModeSelectionFragment extends BaseFragment {
 
     @OnClick(R.id.robot)
     public void goToRobotActivity() {
-        QBAuth.createSession(new QBEntityCallbackImpl<QBSession>() {
+        final QBUser robot = User.getRobot();
+
+        QBAuth.createSession(robot, new QBEntityCallbackImpl<QBSession>() {
             @Override
-            public void onSuccess(QBSession session, Bundle params) {
-                Toast.makeText(getContext(), "QB Session created successfully", Toast.LENGTH_SHORT).show();
+            public void onSuccess(QBSession result, Bundle params) {
+                Log.d(TAG, "Robot session created successfully");
+
+                robot.setId(result.getUserId());
+
+                if(!QBChatService.isInitialized()) {
+                    QBChatService.init(getContext());
+                }
+                QBChatService chatService = QBChatService.getInstance();
+
+                chatService.login(robot, new QBEntityCallbackImpl<QBUser>() {
+
+                    @Override
+                    public void onSuccess() {
+                        Log.d(TAG, "Robot successfully logged in to chat, starting RobotActivity");
+                        //Intent intent = new Intent(getContext(), DriverActivity.class);
+                        //startActivity(intent);
+                    }
+
+                    @Override
+                    public void onError(List errors) {
+
+                        Toast.makeText(getContext(), "Error when logging in", Toast.LENGTH_SHORT).show();
+                        for (Object error : errors) {
+                            Log.d(TAG, error.toString());
+                        }
+                    }
+                });
             }
 
             @Override
             public void onError(List<String> errors) {
-                for (String error : errors) {
-                    Log.e(TAG, error);
-                }
+                Toast.makeText(getContext(), "Could not start session", Toast.LENGTH_SHORT).show();
             }
         });
     }

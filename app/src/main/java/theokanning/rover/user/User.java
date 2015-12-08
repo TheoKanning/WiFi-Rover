@@ -21,9 +21,11 @@ public class User {
     private static final String TAG = "User";
     private static final String DRIVER_USERNAME = "driver";
     private static final String DRIVER_PASSWORD = "qh8ZhC5z";
+    public static final int DRIVER_ID = 7348049;
 
     private static final String ROBOT_USERNAME = "robot";
     private static final String ROBOT_PASSWORD = "hxJVfsSd";
+    public static final int ROBOT_ID = 7348068;
 
     public static QBUser getDriver(){
         return new QBUser(DRIVER_USERNAME, DRIVER_PASSWORD);
