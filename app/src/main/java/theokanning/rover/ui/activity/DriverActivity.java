@@ -4,6 +4,10 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.quickblox.chat.QBChatService;
+import com.quickblox.chat.QBSignaling;
+import com.quickblox.chat.QBWebRTCSignaling;
+import com.quickblox.chat.listeners.QBVideoChatSignalingManagerListener;
 import com.quickblox.videochat.webrtc.QBRTCClient;
 import com.quickblox.videochat.webrtc.QBRTCSession;
 import com.quickblox.videochat.webrtc.QBRTCTypes;
@@ -30,6 +34,17 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_driver);
 
+        QBChatService.getInstance().getVideoChatWebRTCSignalingManager()
+                .addSignalingManagerListener(new QBVideoChatSignalingManagerListener() {
+                    @Override
+                    public void signalingCreated(QBSignaling qbSignaling, boolean createdLocally) {
+                        if (!createdLocally) {
+                            QBRTCClient.getInstance(DriverActivity.this).addSignaling((QBWebRTCSignaling) qbSignaling);
+                        }
+                    }
+                });
+
+
         setFragment(new ConnectFragment(), true);
     }
 
@@ -42,7 +57,7 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
         //TODO implement QBRTCSessionConnectionCallbacks
 
         List<Integer> ids = new ArrayList<>();
-        ids.add(User.ROBOT_ID);
+        ids.add(User.ROBOT.getId());
 
         //Init session
         QBRTCSession session = QBRTCClient.getInstance(this).createNewSessionWithOpponents(ids,

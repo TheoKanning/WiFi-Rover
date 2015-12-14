@@ -1,61 +1,39 @@
 package theokanning.rover.user;
 
-import android.content.Context;
-import android.os.Bundle;
-import android.util.Log;
-import android.widget.Toast;
-
-import com.quickblox.core.QBEntityCallbackImpl;
-import com.quickblox.users.QBUsers;
 import com.quickblox.users.model.QBUser;
 
-import java.util.List;
-
 /**
- * Contains factory methods for getting driver and robot user credentials
- * Users are returned as new objects because they are mutable
+ * Enum of all QuickBlox users for this application
  */
-public class User {
+public enum User {
+    DRIVER("Driver", "qh8ZhC5z", 7348049),
+    ROBOT("Robot", "hxJVfsSd", 7348068);
 
+    private final String name;
+    private final int id;
+    private final QBUser qbUser;
 
-    private static final String TAG = "User";
-    private static final String DRIVER_USERNAME = "driver";
-    private static final String DRIVER_PASSWORD = "qh8ZhC5z";
-    public static final int DRIVER_ID = 7348049;
-
-    private static final String ROBOT_USERNAME = "robot";
-    private static final String ROBOT_PASSWORD = "hxJVfsSd";
-    public static final int ROBOT_ID = 7348068;
-
-    public static QBUser getDriver(){
-        return new QBUser(DRIVER_USERNAME, DRIVER_PASSWORD);
+    User(String name, String password, int id) {
+        this.name = name;
+        this.id = id;
+        this.qbUser = new QBUser(name, password);
+        qbUser.setId(id);
     }
 
-    public static QBUser getRobot(){
-        return new QBUser(ROBOT_USERNAME, ROBOT_PASSWORD);
+    public String getName() {
+        return name;
     }
 
-    /**
-     * Adds user to QuickBlox server, only needs to be called once per user
-     * Shows a toast with request result and prints all error messages if any are received
-     * @param newUser new user to be added to server
-     * @param context context in which to show toast message
-     */
-    public static void addUserToQuickBlox(final QBUser newUser, final Context context){
-        QBUsers.signUp(newUser, new QBEntityCallbackImpl<QBUser>() {
-            @Override
-            public void onSuccess(QBUser user, Bundle args) {
-                Log.d(TAG, newUser.getLogin() + " signed up successfully");
-                Toast.makeText(context, newUser.getLogin() + " signed up successfully", Toast.LENGTH_SHORT).show();
-            }
+    public int getId() {
+        return id;
+    }
 
-            @Override
-            public void onError(List<String> errors) {
-                Toast.makeText(context, newUser.getLogin() + " not signed up", Toast.LENGTH_SHORT).show();
-                for(String error : errors){
-                    Log.e(TAG, error);
-                }
-            }
-        });
+    public QBUser getQbUser() {
+        return qbUser;
+    }
+
+    @Override
+    public String toString() {
+        return name;
     }
 }

@@ -1,6 +1,7 @@
 package theokanning.rover.ui.fragment;
 
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -13,7 +14,10 @@ import com.quickblox.auth.QBAuth;
 import com.quickblox.auth.model.QBSession;
 import com.quickblox.chat.QBChatService;
 import com.quickblox.core.QBEntityCallbackImpl;
+import com.quickblox.users.QBUsers;
 import com.quickblox.users.model.QBUser;
+
+import org.jivesoftware.smack.SmackException;
 
 import java.util.List;
 
@@ -31,83 +35,69 @@ public class ModeSelectionFragment extends BaseFragment {
 
     private static final String TAG = "ModeSelectionFragment";
 
-    /**
-     * Starts driver session and logs in to chat service. If both are successful, starts
-     * DriverActivity
-     */
     @OnClick(R.id.driver)
     public void goToDriverActivity() {
-
-        final QBUser driver = User.getDriver();
-
-        QBAuth.createSession(driver, new QBEntityCallbackImpl<QBSession>() {
-            @Override
-            public void onSuccess(QBSession result, Bundle params) {
-                Log.d(TAG, "Driver session created successfully");
-
-                driver.setId(result.getUserId());
-
-                if(!QBChatService.isInitialized()) {
-                    QBChatService.init(getContext());
-                }
-                QBChatService chatService = QBChatService.getInstance();
-
-                chatService.login(driver, new QBEntityCallbackImpl<QBUser>() {
-
-                    @Override
-                    public void onSuccess() {
-                        Log.d(TAG, "Driver successfully logged in to chat, starting DriverActivity");
-                        Intent intent = new Intent(getContext(), DriverActivity.class);
-                        startActivity(intent);
-                    }
-
-                    @Override
-                    public void onError(List errors) {
-
-                        Toast.makeText(getContext(), "Error when logging in", Toast.LENGTH_SHORT).show();
-                        for (Object error : errors) {
-                            Log.d(TAG, error.toString());
-                        }
-                    }
-                });
-            }
-
-            @Override
-            public void onError(List<String> errors) {
-                Toast.makeText(getContext(), "Could not start session", Toast.LENGTH_SHORT).show();
-            }
-        });
+        logInAndEnterActivity(User.DRIVER);
     }
 
     @OnClick(R.id.robot)
     public void goToRobotActivity() {
-        final QBUser robot = User.getRobot();
+        logInAndEnterActivity(User.ROBOT);
+    }
 
-        QBAuth.createSession(robot, new QBEntityCallbackImpl<QBSession>() {
+    /**
+     * Navigates to the appropriate activity based on the user enum received. First creates a QB
+     * session, then logs in as the appropriate user
+     *
+     * @param user the user to be logged in, determines which activity is started
+     */
+    private void logInAndEnterActivity(final User user) {
+        final QBUser qbUser = user.getQbUser();
+
+        QBAuth.createSession(qbUser, new QBEntityCallbackImpl<QBSession>() {
             @Override
             public void onSuccess(QBSession result, Bundle params) {
-                Log.d(TAG, "Robot session created successfully");
+                Log.d(TAG, user + " session created successfully");
 
-                robot.setId(result.getUserId());
-
-                if(!QBChatService.isInitialized()) {
+                if (!QBChatService.isInitialized()) {
                     QBChatService.init(getContext());
                 }
                 QBChatService chatService = QBChatService.getInstance();
 
-                chatService.login(robot, new QBEntityCallbackImpl<QBUser>() {
+                if (chatService.isLoggedIn()) {
+                    try {
+                        Log.d(TAG, "Logging out");
+                        chatService.logout();
+                    } catch (SmackException.NotConnectedException e) {
+                        Log.d(TAG, "Failed to log out");
+                        return;
+                    }
+                }
+
+                chatService.login(qbUser, new QBEntityCallbackImpl<QBUser>() {
 
                     @Override
                     public void onSuccess() {
-                        Log.d(TAG, "Robot successfully logged in to chat, starting RobotActivity");
-                        Intent intent = new Intent(getContext(), RobotActivity.class);
+                        Log.d(TAG, user + " successfully logged in to chat, starting " + user + " activity");
+
+                        Intent intent;
+                        switch (user) {
+                            case DRIVER:
+                                intent = new Intent(getContext(), DriverActivity.class);
+                                break;
+                            case ROBOT:
+                            default:
+                                intent = new Intent(getContext(), RobotActivity.class);
+                                break;
+                        }
+
                         startActivity(intent);
                     }
 
                     @Override
                     public void onError(List errors) {
 
-                        Toast.makeText(getContext(), "Error when logging in", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(), "Error when logging in " + user, Toast.LENGTH_SHORT).show();
                         for (Object error : errors) {
                             Log.d(TAG, error.toString());
                         }
@@ -117,7 +107,7 @@ public class ModeSelectionFragment extends BaseFragment {
 
             @Override
             public void onError(List<String> errors) {
-                Toast.makeText(getContext(), "Could not start session", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Could not start " + user + " session", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -138,5 +128,29 @@ public class ModeSelectionFragment extends BaseFragment {
     @Override
     public int getTitleResourceId() {
         return R.string.mode_selection_title;
+    }
+
+    /**
+     * Adds user to QuickBlox server, only needs to be called once per user
+     * Shows a toast with request result and prints all error messages if any are received
+     * @param newUser new user to be added to server
+     * @param context context in which to show toast message
+     */
+    public static void addUserToQuickBlox(final QBUser newUser, final Context context){
+        QBUsers.signUp(newUser, new QBEntityCallbackImpl<QBUser>() {
+            @Override
+            public void onSuccess(QBUser user, Bundle args) {
+                Log.d(TAG, newUser.getLogin() + " signed up successfully");
+                Toast.makeText(context, newUser.getLogin() + " signed up successfully", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onError(List<String> errors) {
+                Toast.makeText(context, newUser.getLogin() + " not signed up", Toast.LENGTH_SHORT).show();
+                for (String error : errors) {
+                    Log.e(TAG, error);
+                }
+            }
+        });
     }
 }
