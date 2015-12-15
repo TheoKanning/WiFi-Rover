@@ -29,9 +29,13 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_robot);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
 
         initQbrtcClient();
-
         setFragment(new WaitingFragment(), true);
     }
 
@@ -55,16 +59,21 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
     }
 
     @Override
-    public void onReceiveNewSession(QBRTCSession qbrtcSession) {
+    public void onReceiveNewSession(final QBRTCSession qbrtcSession) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(RobotActivity.this, "Call received", Toast.LENGTH_SHORT).show();
+                Log.d(TAG, "Call received");
 
-        Toast.makeText(this, "Call received", Toast.LENGTH_SHORT).show();
-        Log.d(TAG, "Call received");
+                Map<String, String> userInfo = new HashMap<>();
+                userInfo.put("Key", "Robot");
 
-        Map<String, String> userInfo = new HashMap<>();
-        userInfo.put("Key", "Robot");
+                // Accept incoming call
+                qbrtcSession.acceptCall(qbrtcSession.getUserInfo());
+            }
+        });
 
-        // Accept incoming call
-        qbrtcSession.acceptCall(userInfo);
     }
 
     @Override

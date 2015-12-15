@@ -9,9 +9,12 @@ import com.quickblox.chat.QBSignaling;
 import com.quickblox.chat.QBWebRTCSignaling;
 import com.quickblox.chat.listeners.QBVideoChatSignalingManagerListener;
 import com.quickblox.videochat.webrtc.QBRTCClient;
+import com.quickblox.videochat.webrtc.QBRTCConfig;
 import com.quickblox.videochat.webrtc.QBRTCSession;
 import com.quickblox.videochat.webrtc.QBRTCTypes;
 import com.quickblox.videochat.webrtc.callbacks.QBRTCClientSessionCallbacks;
+
+import org.jivesoftware.smack.SmackException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,6 +37,13 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_driver);
 
+        initQbrtcClient();
+
+        setFragment(new ConnectFragment(), true);
+    }
+
+    private void initQbrtcClient(){
+
         QBChatService.getInstance().getVideoChatWebRTCSignalingManager()
                 .addSignalingManagerListener(new QBVideoChatSignalingManagerListener() {
                     @Override
@@ -44,18 +54,17 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
                     }
                 });
 
+        QBRTCConfig.setAnswerTimeInterval(10); //Wait for 10 seconds before giving up call
+        QBRTCConfig.getDebugEnabled();
 
-        setFragment(new ConnectFragment(), true);
+        QBRTCClient.getInstance(this).addSessionCallbacksListener(this);
+        QBRTCClient.getInstance(this).prepareToProcessCalls();
     }
 
     /**
      * Starts a connection to the robot user. Called by ConnectFragment.
      */
     public void connect() {
-        QBRTCClient.getInstance(this).prepareToProcessCalls();
-        QBRTCClient.getInstance(this).addSessionCallbacksListener(this);
-        //TODO implement QBRTCSessionConnectionCallbacks
-
         List<Integer> ids = new ArrayList<>();
         ids.add(User.ROBOT.getId());
 
@@ -63,12 +72,13 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
         QBRTCSession session = QBRTCClient.getInstance(this).createNewSessionWithOpponents(ids,
                 QBRTCTypes.QBConferenceType.QB_CONFERENCE_TYPE_VIDEO);
 
+
         Map<String, String> userInfo = new HashMap<>();
         userInfo.put("key", "robot");
 
         //Start call
         Log.d(TAG, "Starting call");
-        session.startCall(userInfo);
+        session.startCall(session.getUserInfo());
     }
 
     @Override
@@ -79,7 +89,7 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
     @Override
     public void onUserNotAnswer(QBRTCSession qbrtcSession, Integer integer) {
         Toast.makeText(this, "Robot did not answer", Toast.LENGTH_SHORT).show();
-        Log.d(TAG, "Robot did not answer");
+        Log.e(TAG, "Robot did not answer");
     }
 
     @Override
@@ -112,5 +122,18 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
     @Override
     public void onSessionStartClose(QBRTCSession qbrtcSession) {
 
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        if(QBChatService.isInitialized()){
+            try{
+                QBRTCClient.getInstance(this).destroy();
+                QBChatService.getInstance().logout();
+            } catch (SmackException.NotConnectedException e){
+                e.printStackTrace();
+            }
+        }
     }
 }
