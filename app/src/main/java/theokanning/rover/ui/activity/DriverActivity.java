@@ -13,6 +13,7 @@ import com.quickblox.videochat.webrtc.QBRTCConfig;
 import com.quickblox.videochat.webrtc.QBRTCSession;
 import com.quickblox.videochat.webrtc.QBRTCTypes;
 import com.quickblox.videochat.webrtc.callbacks.QBRTCClientSessionCallbacks;
+import com.quickblox.videochat.webrtc.callbacks.QBRTCClientVideoTracksCallbacks;
 
 import org.jivesoftware.smack.SmackException;
 
@@ -23,6 +24,7 @@ import java.util.Map;
 
 import theokanning.rover.R;
 import theokanning.rover.ui.fragment.driver.ConnectFragment;
+import theokanning.rover.ui.fragment.driver.ControlFragment;
 import theokanning.rover.user.User;
 
 /**
@@ -31,6 +33,8 @@ import theokanning.rover.user.User;
  */
 public class DriverActivity extends BaseActivity implements QBRTCClientSessionCallbacks {
     private static final String TAG = "DriverActivity";
+
+    private QBRTCSession currentSession;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,7 +73,7 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
         ids.add(User.ROBOT.getId());
 
         //Init session
-        QBRTCSession session = QBRTCClient.getInstance(this).createNewSessionWithOpponents(ids,
+        currentSession = QBRTCClient.getInstance(this).createNewSessionWithOpponents(ids,
                 QBRTCTypes.QBConferenceType.QB_CONFERENCE_TYPE_VIDEO);
 
 
@@ -78,7 +82,13 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
 
         //Start call
         Log.d(TAG, "Starting call");
-        session.startCall(session.getUserInfo());
+        currentSession.startCall(currentSession.getUserInfo());
+    }
+
+    public void addVideoTrackCallbacksListener(QBRTCClientVideoTracksCallbacks videoTracksCallbacks) {
+        if (currentSession != null){
+            currentSession.addVideoTrackCallbacksListener(videoTracksCallbacks);
+        }
     }
 
     @Override
@@ -99,9 +109,13 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
 
     @Override
     public void onCallAcceptByUser(QBRTCSession qbrtcSession, Integer integer, Map<String, String> map) {
+        if(qbrtcSession != currentSession){
+            Log.e(TAG, "Call accepted for incorrect session");
+            return;
+        }
         Toast.makeText(this, "Connected to robot", Toast.LENGTH_SHORT).show();
         Log.d(TAG, "Connected successfully");
-        //TODO start control fragment here
+        setFragment(new ControlFragment(), true);
     }
 
     @Override
