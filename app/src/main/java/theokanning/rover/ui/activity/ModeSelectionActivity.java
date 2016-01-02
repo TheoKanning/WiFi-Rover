@@ -34,6 +34,11 @@ public class ModeSelectionActivity extends BaseActivity implements ModeSelection
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
 
         showModeSelection();
     }
