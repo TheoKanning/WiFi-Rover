@@ -7,6 +7,10 @@
     <string name="mode_selection_driver">Driver Mode</string>
     <string name="mode_selection_robot">Robot Mode</string>
 
+    <!-- Logging In Fragment -->
+    <string name="logging_in_title">Logging In</string>
+    <string name="logging_in_description">Logging in to chat service...</string>
+
     <!-- Connect Fragment -->
     <string name="connect">Connect</string>
     <string name="connect_description">Make sure the robot phone is ready, then press connect.</string>

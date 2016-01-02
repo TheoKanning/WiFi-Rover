@@ -73,7 +73,6 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
                 qbrtcSession.acceptCall(qbrtcSession.getUserInfo());
             }
         });
-
     }
 
     @Override
