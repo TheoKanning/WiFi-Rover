@@ -15,8 +15,6 @@ import com.quickblox.videochat.webrtc.QBRTCTypes;
 import com.quickblox.videochat.webrtc.callbacks.QBRTCClientSessionCallbacks;
 import com.quickblox.videochat.webrtc.callbacks.QBRTCClientVideoTracksCallbacks;
 
-import org.jivesoftware.smack.SmackException;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -144,15 +142,6 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
 
         if(currentSession != null){
             currentSession.hangUp(null);
-        }
-
-        if(QBChatService.isInitialized()){
-            try{
-                QBRTCClient.getInstance(this).destroy();
-                QBChatService.getInstance().logout();
-            } catch (SmackException.NotConnectedException e){
-                e.printStackTrace();
-            }
         }
     }
 }
