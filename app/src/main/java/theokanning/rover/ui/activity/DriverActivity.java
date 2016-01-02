@@ -141,6 +141,11 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
     @Override
     public void onBackPressed() {
         super.onBackPressed();
+
+        if(currentSession != null){
+            currentSession.hangUp(null);
+        }
+
         if(QBChatService.isInitialized()){
             try{
                 QBRTCClient.getInstance(this).destroy();
