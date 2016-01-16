@@ -3,7 +3,6 @@ package theokanning.rover.ui.activity;
 
 import android.os.Bundle;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 
 import theokanning.rover.R;
@@ -39,11 +38,6 @@ public class BaseActivity extends AppCompatActivity {
                 }
                 ft.commit();
             }
-        }
-
-        ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null) {
-            getSupportActionBar().setTitle(fragment.getTitleResourceId());
         }
     }
 

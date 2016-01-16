@@ -39,11 +39,6 @@ public class ControlFragment extends BaseFragment implements QBRTCClientVideoTra
     }
 
     @Override
-    public int getTitleResourceId() {
-        return 0; //Not needed
-    }
-
-    @Override
     public void onLocalVideoTrackReceive(QBRTCSession qbrtcSession, QBRTCVideoTrack qbrtcVideoTrack) {
         //no need to do anything if we are only receiving a stream
     }

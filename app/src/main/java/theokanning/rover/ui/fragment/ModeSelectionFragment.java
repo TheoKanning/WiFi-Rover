@@ -55,9 +55,4 @@ public class ModeSelectionFragment extends BaseFragment {
             throw e;
         }
     }
-
-    @Override
-    public int getTitleResourceId() {
-        return R.string.mode_selection_title;
-    }
 }

@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -20,8 +19,8 @@ import org.jivesoftware.smack.SmackException;
 import java.util.List;
 
 import theokanning.rover.R;
-import theokanning.rover.ui.fragment.LoggingInFragment;
 import theokanning.rover.ui.fragment.ModeSelectionFragment;
+import theokanning.rover.ui.fragment.WaitingFragment;
 import theokanning.rover.user.User;
 
 public class ModeSelectionActivity extends BaseActivity implements ModeSelectionInterface{
@@ -31,9 +30,7 @@ public class ModeSelectionActivity extends BaseActivity implements ModeSelection
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        setContentView(R.layout.activity_mode_selection);
     }
 
     @Override
@@ -44,7 +41,7 @@ public class ModeSelectionActivity extends BaseActivity implements ModeSelection
     }
 
     /**
-     * Shows mode selection fragment without adding to back stack so that user can't return to LoggingInFragment
+     * Shows mode selection fragment without adding to back stack so that user can't return to WaitingFragment
      */
     private void showModeSelection(){
         FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
@@ -56,12 +53,16 @@ public class ModeSelectionActivity extends BaseActivity implements ModeSelection
      * Shows a waiting screen when logging in
      */
     private void showLoggingIn(){
-        setFragment(new LoggingInFragment(), true);
+        WaitingFragment fragment = new WaitingFragment();
+        Bundle bundle = new Bundle();
+        bundle.putString(WaitingFragment.WAITING_TEXT_EXTRA, "Logging in to chat service...");
+        fragment.setArguments(bundle);
+        setFragment(fragment, true);
     }
 
     /**
      * Navigates to the appropriate activity based on the user enum received. First creates a QB
-     * session, then logs in as the appropriate user. Shows LoggingInFragment while attempting to
+     * session, then logs in as the appropriate user. Shows WaitingFragment while attempting to
      * make a connection
      *
      * @param user the user to be logged in, determines which activity is started

@@ -34,9 +34,4 @@ public class ConnectFragment extends BaseFragment {
         super.onViewCreated(view, savedInstanceState);
         ButterKnife.bind(this,view);
     }
-
-    @Override
-    public int getTitleResourceId() {
-        return 0;
-    }
 }

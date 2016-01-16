@@ -16,7 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import theokanning.rover.R;
-import theokanning.rover.ui.fragment.robot.WaitingFragment;
+import theokanning.rover.ui.fragment.WaitingFragment;
 
 /**
  * Controls all call activity for the robot
@@ -36,7 +36,7 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
         super.onStart();
 
         initQbrtcClient();
-        setFragment(new WaitingFragment(), true);
+        showWaitingFragment();
     }
 
     /**
@@ -56,6 +56,17 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
                         }
                     }
                 });
+    }
+
+    /**
+     * Shows a waiting fragment to tell the user that the app is waiting for a connection
+     */
+    private void showWaitingFragment() {
+        WaitingFragment fragment = new WaitingFragment();
+        Bundle bundle = new Bundle();
+        bundle.putString(WaitingFragment.WAITING_TEXT_EXTRA, "Waiting for connection...");
+        fragment.setArguments(bundle);
+        setFragment(fragment, true);
     }
 
     @Override
