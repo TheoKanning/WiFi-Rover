@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 import theokanning.rover.R;
+import theokanning.rover.ui.fragment.WaitingFragment;
 import theokanning.rover.ui.fragment.driver.ConnectFragment;
 import theokanning.rover.ui.fragment.driver.ControlFragment;
 import theokanning.rover.user.User;
@@ -40,8 +41,7 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
         setContentView(R.layout.activity_driver);
 
         initQbrtcClient();
-
-        setFragment(new ConnectFragment(), true);
+        showConnectFragment();
     }
 
     private void initQbrtcClient(){
@@ -64,9 +64,29 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
     }
 
     /**
+     * Shows connect fragment that gives user option to initiate call
+     */
+    private void showConnectFragment(){
+        setFragment(new ConnectFragment(), true);
+    }
+
+    /**
+     * Shows waiting screen when starting call
+     */
+    private void showWaitingFragment(){
+        WaitingFragment fragment = new WaitingFragment();
+        Bundle bundle = new Bundle();
+        bundle.putString(WaitingFragment.WAITING_TEXT_EXTRA, "Attempting to connect to robot...");
+        fragment.setArguments(bundle);
+        setFragment(fragment, true);
+    }
+
+    /**
      * Starts a connection to the robot user. Called by ConnectFragment.
      */
     public void connect() {
+        showWaitingFragment();
+
         List<Integer> ids = new ArrayList<>();
         ids.add(User.ROBOT.getId());
 
@@ -97,7 +117,7 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
     @Override
     public void onUserNotAnswer(QBRTCSession qbrtcSession, Integer integer) {
         Toast.makeText(this, "Robot did not answer", Toast.LENGTH_SHORT).show();
-        Log.e(TAG, "Robot did not answer");
+        showConnectFragment();
     }
 
     @Override
@@ -128,7 +148,7 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
 
     @Override
     public void onSessionClosed(QBRTCSession qbrtcSession) {
-
+        showConnectFragment();
     }
 
     @Override
