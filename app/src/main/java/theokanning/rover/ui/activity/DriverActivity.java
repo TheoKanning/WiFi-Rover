@@ -5,15 +5,22 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.quickblox.chat.QBChatService;
+import com.quickblox.chat.QBPrivateChat;
 import com.quickblox.chat.QBSignaling;
 import com.quickblox.chat.QBWebRTCSignaling;
+import com.quickblox.chat.exception.QBChatException;
+import com.quickblox.chat.listeners.QBMessageListener;
 import com.quickblox.chat.listeners.QBVideoChatSignalingManagerListener;
+import com.quickblox.chat.model.QBChatMessage;
 import com.quickblox.videochat.webrtc.QBRTCClient;
 import com.quickblox.videochat.webrtc.QBRTCConfig;
 import com.quickblox.videochat.webrtc.QBRTCSession;
 import com.quickblox.videochat.webrtc.QBRTCTypes;
 import com.quickblox.videochat.webrtc.callbacks.QBRTCClientSessionCallbacks;
 import com.quickblox.videochat.webrtc.callbacks.QBRTCClientVideoTracksCallbacks;
+
+import org.jivesoftware.smack.SmackException;
+import org.jivesoftware.smack.XMPPException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,6 +41,7 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
     private static final String TAG = "DriverActivity";
 
     private QBRTCSession currentSession;
+    private QBPrivateChat privateChat;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,10 +65,32 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
                 });
 
         QBRTCConfig.setAnswerTimeInterval(10); //Wait for 10 seconds before giving up call
-        QBRTCConfig.getDebugEnabled();
+        QBRTCConfig.setDebugEnabled(false);
 
         QBRTCClient.getInstance(this).addSessionCallbacksListener(this);
         QBRTCClient.getInstance(this).prepareToProcessCalls();
+    }
+
+    /**
+     * Creates a chat session with the robot and sends a hello message
+     */
+    private void createChatSession(){
+        Integer opponentId = User.ROBOT.getId();
+
+        QBPrivateChat privateChat = QBChatService.getInstance()
+                .getPrivateChatManager()
+                .createChat(opponentId, privateChatMessageListener);
+
+        try {
+            QBChatMessage chatMessage = new QBChatMessage();
+            chatMessage.setBody("Hi there!");
+
+            privateChat.sendMessage(chatMessage);
+        } catch (XMPPException e) {
+
+        } catch (SmackException.NotConnectedException e) {
+
+        }
     }
 
     /**
@@ -101,6 +131,7 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
         //Start call
         Log.d(TAG, "Starting call");
         currentSession.startCall(currentSession.getUserInfo());
+        createChatSession();
     }
 
     public void addVideoTrackCallbacksListener(QBRTCClientVideoTracksCallbacks videoTracksCallbacks) {
@@ -155,6 +186,18 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
     public void onSessionStartClose(QBRTCSession qbrtcSession) {
 
     }
+
+    QBMessageListener<QBPrivateChat> privateChatMessageListener = new QBMessageListener<QBPrivateChat>() {
+        @Override
+        public void processMessage(QBPrivateChat privateChat, final QBChatMessage chatMessage) {
+            Toast.makeText(DriverActivity.this, chatMessage.getBody(), Toast.LENGTH_SHORT).show();
+        }
+
+        @Override
+        public void processError(QBPrivateChat privateChat, QBChatException error, QBChatMessage originMessage){
+            Log.e(TAG, error.getMessage());
+        }
+    };
 
     @Override
     public void onBackPressed() {

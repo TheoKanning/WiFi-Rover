@@ -5,10 +5,17 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.quickblox.chat.QBChatService;
+import com.quickblox.chat.QBPrivateChat;
+import com.quickblox.chat.QBPrivateChatManager;
 import com.quickblox.chat.QBSignaling;
 import com.quickblox.chat.QBWebRTCSignaling;
+import com.quickblox.chat.exception.QBChatException;
+import com.quickblox.chat.listeners.QBMessageListener;
+import com.quickblox.chat.listeners.QBPrivateChatManagerListener;
 import com.quickblox.chat.listeners.QBVideoChatSignalingManagerListener;
+import com.quickblox.chat.model.QBChatMessage;
 import com.quickblox.videochat.webrtc.QBRTCClient;
+import com.quickblox.videochat.webrtc.QBRTCConfig;
 import com.quickblox.videochat.webrtc.QBRTCSession;
 import com.quickblox.videochat.webrtc.callbacks.QBRTCClientSessionCallbacks;
 
@@ -25,6 +32,8 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
 
     private static final String TAG = "RobotActivity";
 
+    private QBPrivateChat privateChat;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -34,8 +43,8 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
     @Override
     protected void onStart() {
         super.onStart();
-
         initQbrtcClient();
+        initChatClient();
         showWaitingFragment();
     }
 
@@ -56,6 +65,22 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
                         }
                     }
                 });
+
+        QBRTCConfig.setDebugEnabled(false);
+    }
+
+    private void initChatClient(){
+        QBPrivateChatManagerListener privateChatManagerListener = new QBPrivateChatManagerListener() {
+            @Override
+            public void chatCreated(final QBPrivateChat incomingPrivateChat, final boolean createdLocally) {
+                if(!createdLocally){
+                    privateChat = incomingPrivateChat;
+                    privateChat.addMessageListener(privateChatMessageListener);
+                }
+            }
+        };
+        QBPrivateChatManager privateChatManager = QBChatService.getInstance().getPrivateChatManager();
+        privateChatManager.addPrivateChatManagerListener(privateChatManagerListener);
     }
 
     /**
@@ -120,4 +145,22 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
     public void onSessionStartClose(QBRTCSession qbrtcSession) {
 
     }
+
+    QBMessageListener<QBPrivateChat> privateChatMessageListener = new QBMessageListener<QBPrivateChat>() {
+        @Override
+        public void processMessage(QBPrivateChat privateChat, final QBChatMessage chatMessage) {
+            Log.e(TAG, "Message received: " + chatMessage.getBody());
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(RobotActivity.this, chatMessage.getBody(), Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+
+        @Override
+        public void processError(QBPrivateChat privateChat, QBChatException error, QBChatMessage originMessage){
+            Log.e(TAG, error.getMessage());
+        }
+    };
 }
