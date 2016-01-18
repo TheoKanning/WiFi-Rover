@@ -2,7 +2,9 @@ package theokanning.rover.ui.fragment.driver;
 
 
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -61,9 +63,25 @@ public class ControlFragment extends BaseFragment implements QBRTCClientVideoTra
         qbrtcVideoTrack.addRenderer(new VideoRenderer(videoView.obtainVideoRenderer(RTCGLVideoView.RendererSurface.MAIN)));
     }
 
+    private Handler handler = new Handler();
+
+    Runnable runnable = new Runnable() {
+        @Override
+        public void run() {
+            sendDirection(SteeringListener.Direction.UP);
+            handler.postDelayed(runnable, 100);
+        }
+    };
+
     @OnTouch(R.id.up)
-    public void up(){
-        sendDirection(SteeringListener.Direction.UP);
+    public boolean up(View v, MotionEvent event){
+
+        if(event.getAction() == MotionEvent.ACTION_DOWN){
+            handler.post(runnable);
+        } else if(event.getAction() == MotionEvent.ACTION_UP){
+            handler.removeCallbacks(runnable);
+        }
+        return true;
     }
 
     @OnClick(R.id.down)
