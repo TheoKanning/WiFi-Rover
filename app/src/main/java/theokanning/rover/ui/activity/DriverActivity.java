@@ -37,7 +37,7 @@ import theokanning.rover.user.User;
  * Activity where user controls remote device and watches video stream. Starts by showing
  * instructions to connect to remote device, then connects and shows video stream.
  */
-public class DriverActivity extends BaseActivity implements QBRTCClientSessionCallbacks {
+public class DriverActivity extends BaseActivity implements QBRTCClientSessionCallbacks, SteeringListener {
     private static final String TAG = "DriverActivity";
 
     private QBRTCSession currentSession;
@@ -52,7 +52,7 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
         showConnectFragment();
     }
 
-    private void initQbrtcClient(){
+    private void initQbrtcClient() {
 
         QBChatService.getInstance().getVideoChatWebRTCSignalingManager()
                 .addSignalingManagerListener(new QBVideoChatSignalingManagerListener() {
@@ -74,17 +74,26 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
     /**
      * Creates a chat session with the robot and sends a hello message
      */
-    private void createChatSession(){
-        Integer opponentId = User.ROBOT.getId();
+    private void createChatSession() {
+        sendChatMessage("Hello!");
+    }
 
-        QBPrivateChat privateChat = QBChatService.getInstance()
-                .getPrivateChatManager()
-                .createChat(opponentId, privateChatMessageListener);
+    /**
+     * Gets the chat session and sends a text message
+     *
+     * @param message string to send over chat client
+     */
+    private void sendChatMessage(String message) {
+        if (privateChat == null) {
+            Integer opponentId = User.ROBOT.getId();
+            privateChat = QBChatService.getInstance()
+                    .getPrivateChatManager()
+                    .createChat(opponentId, privateChatMessageListener);
+        }
 
         try {
             QBChatMessage chatMessage = new QBChatMessage();
-            chatMessage.setBody("Hi there!");
-
+            chatMessage.setBody(message);
             privateChat.sendMessage(chatMessage);
         } catch (XMPPException e) {
 
@@ -96,14 +105,14 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
     /**
      * Shows connect fragment that gives user option to initiate call
      */
-    private void showConnectFragment(){
+    private void showConnectFragment() {
         setFragment(new ConnectFragment(), true);
     }
 
     /**
      * Shows waiting screen when starting call
      */
-    private void showWaitingFragment(){
+    private void showWaitingFragment() {
         WaitingFragment fragment = new WaitingFragment();
         Bundle bundle = new Bundle();
         bundle.putString(WaitingFragment.WAITING_TEXT_EXTRA, "Attempting to connect to robot...");
@@ -135,7 +144,7 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
     }
 
     public void addVideoTrackCallbacksListener(QBRTCClientVideoTracksCallbacks videoTracksCallbacks) {
-        if (currentSession != null){
+        if (currentSession != null) {
             currentSession.addVideoTrackCallbacksListener(videoTracksCallbacks);
         }
     }
@@ -158,7 +167,7 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
 
     @Override
     public void onCallAcceptByUser(QBRTCSession qbrtcSession, Integer integer, Map<String, String> map) {
-        if(qbrtcSession != currentSession){
+        if (qbrtcSession != currentSession) {
             Log.e(TAG, "Call accepted for incorrect session");
             return;
         }
@@ -194,7 +203,7 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
         }
 
         @Override
-        public void processError(QBPrivateChat privateChat, QBChatException error, QBChatMessage originMessage){
+        public void processError(QBPrivateChat privateChat, QBChatException error, QBChatMessage originMessage) {
             Log.e(TAG, error.getMessage());
         }
     };
@@ -203,8 +212,13 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
     public void onBackPressed() {
         super.onBackPressed();
 
-        if(currentSession != null){
+        if (currentSession != null) {
             currentSession.hangUp(null);
         }
+    }
+
+    @Override
+    public void sendCommand(Direction direction) {
+        sendChatMessage(direction.asText());
     }
 }

@@ -15,8 +15,11 @@ import org.webrtc.VideoRenderer;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
+import butterknife.OnTouch;
 import theokanning.rover.R;
 import theokanning.rover.ui.activity.DriverActivity;
+import theokanning.rover.ui.activity.SteeringListener;
 import theokanning.rover.ui.fragment.BaseFragment;
 
 /**
@@ -24,8 +27,11 @@ import theokanning.rover.ui.fragment.BaseFragment;
  */
 public class ControlFragment extends BaseFragment implements QBRTCClientVideoTracksCallbacks {
 
+
     @Bind(R.id.videoView)
     public RTCGLVideoView videoView;
+
+    private SteeringListener steeringListener;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -35,6 +41,7 @@ public class ControlFragment extends BaseFragment implements QBRTCClientVideoTra
         ButterKnife.bind(this,view);
 
         ((DriverActivity) getActivity()).addVideoTrackCallbacksListener(this);
+        steeringListener = (SteeringListener) getActivity();
         return view;
     }
 
@@ -52,5 +59,34 @@ public class ControlFragment extends BaseFragment implements QBRTCClientVideoTra
     @Override
     public void onRemoteVideoTrackReceive(QBRTCSession qbrtcSession, QBRTCVideoTrack qbrtcVideoTrack, Integer userId) {
         qbrtcVideoTrack.addRenderer(new VideoRenderer(videoView.obtainVideoRenderer(RTCGLVideoView.RendererSurface.MAIN)));
+    }
+
+    @OnTouch(R.id.up)
+    public void up(){
+        sendDirection(SteeringListener.Direction.UP);
+    }
+
+    @OnClick(R.id.down)
+    public void down(){
+        sendDirection(SteeringListener.Direction.DOWN);
+    }
+
+    @OnClick(R.id.left)
+    public void left(){
+        sendDirection(SteeringListener.Direction.LEFT);
+    }
+
+    @OnClick(R.id.right)
+    public void right(){
+        sendDirection(SteeringListener.Direction.RIGHT);
+    }
+
+    /**
+     * Sends a direction command to the SteeringListener
+     *
+     * @param direction direction that user has pressed, up/down etc...
+     */
+    private void sendDirection(SteeringListener.Direction direction){
+        steeringListener.sendCommand(direction);
     }
 }
