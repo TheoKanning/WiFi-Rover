@@ -17,11 +17,11 @@ import org.webrtc.VideoRenderer;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
-import butterknife.OnClick;
 import butterknife.OnTouch;
 import theokanning.rover.R;
 import theokanning.rover.ui.activity.DriverActivity;
 import theokanning.rover.ui.activity.SteeringListener;
+import theokanning.rover.ui.activity.SteeringListener.Direction;
 import theokanning.rover.ui.fragment.BaseFragment;
 
 /**
@@ -35,16 +35,30 @@ public class ControlFragment extends BaseFragment implements QBRTCClientVideoTra
 
     private SteeringListener steeringListener;
 
+    private Direction currentDirection;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
         View view = inflater.inflate(R.layout.fragment_control, container, false);
-        ButterKnife.bind(this,view);
+        ButterKnife.bind(this, view);
 
         ((DriverActivity) getActivity()).addVideoTrackCallbacksListener(this);
         steeringListener = (SteeringListener) getActivity();
         return view;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        handler.post(directionsRunnable);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        handler.removeCallbacks(directionsRunnable);
     }
 
     @Override
@@ -54,9 +68,10 @@ public class ControlFragment extends BaseFragment implements QBRTCClientVideoTra
 
     /**
      * Add streamed video track to the video view
-     * @param qbrtcSession current chat session
+     *
+     * @param qbrtcSession    current chat session
      * @param qbrtcVideoTrack video data to be shown on screen
-     * @param userId id of user who sent video
+     * @param userId          id of user who sent video
      */
     @Override
     public void onRemoteVideoTrackReceive(QBRTCSession qbrtcSession, QBRTCVideoTrack qbrtcVideoTrack, Integer userId) {
@@ -65,46 +80,61 @@ public class ControlFragment extends BaseFragment implements QBRTCClientVideoTra
 
     private Handler handler = new Handler();
 
-    Runnable runnable = new Runnable() {
+    Runnable directionsRunnable = new Runnable() {
         @Override
         public void run() {
-            sendDirection(SteeringListener.Direction.UP);
-            handler.postDelayed(runnable, 100);
+            sendDirection(currentDirection);
+            handler.postDelayed(directionsRunnable, 100);
         }
     };
 
     @OnTouch(R.id.up)
-    public boolean up(View v, MotionEvent event){
-
-        if(event.getAction() == MotionEvent.ACTION_DOWN){
-            handler.post(runnable);
-        } else if(event.getAction() == MotionEvent.ACTION_UP){
-            handler.removeCallbacks(runnable);
-        }
+    public boolean up(View v, MotionEvent event) {
+        updateDirectionPress(Direction.UP, event.getAction());
         return true;
     }
 
-    @OnClick(R.id.down)
-    public void down(){
-        sendDirection(SteeringListener.Direction.DOWN);
+    @OnTouch(R.id.down)
+    public boolean down(View v, MotionEvent event) {
+        updateDirectionPress(Direction.DOWN, event.getAction());
+        return true;
     }
 
-    @OnClick(R.id.left)
-    public void left(){
-        sendDirection(SteeringListener.Direction.LEFT);
+    @OnTouch(R.id.left)
+    public boolean left(View v, MotionEvent event) {
+        updateDirectionPress(Direction.LEFT, event.getAction());
+        return true;
     }
 
-    @OnClick(R.id.right)
-    public void right(){
-        sendDirection(SteeringListener.Direction.RIGHT);
+    @OnTouch(R.id.right)
+    public boolean right(View v, MotionEvent event) {
+        updateDirectionPress(Direction.RIGHT, event.getAction());
+        return true;
     }
+
+    /**
+     * Updates direction commands based on button press changes
+     *
+     * @param direction which direction button
+     * @param action    action returned by press MotionEvent
+     */
+    private void updateDirectionPress(Direction direction, int action) {
+        if (action == MotionEvent.ACTION_DOWN) {
+            currentDirection = direction;
+        } else if (action == MotionEvent.ACTION_UP) {
+            currentDirection = null;
+        }
+    }
+
 
     /**
      * Sends a direction command to the SteeringListener
      *
-     * @param direction direction that user has pressed, up/down etc...
+     * @param direction all directional buttons pressed
      */
-    private void sendDirection(SteeringListener.Direction direction){
-        steeringListener.sendCommand(direction);
+    private void sendDirection(Direction direction) {
+        if (direction != null) {
+            steeringListener.sendCommand(direction);
+        }
     }
 }

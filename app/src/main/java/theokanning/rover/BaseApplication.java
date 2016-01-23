@@ -23,7 +23,6 @@ public class BaseApplication extends Application {
         component.inject(this);
 
         initializeQuickBlox();
-
     }
 
     public BaseComponent getComponent() {
