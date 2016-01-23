@@ -1,5 +1,6 @@
 package theokanning.rover.ui.activity;
 
+import android.bluetooth.BluetoothDevice;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
@@ -19,20 +20,28 @@ import com.quickblox.videochat.webrtc.QBRTCConfig;
 import com.quickblox.videochat.webrtc.QBRTCSession;
 import com.quickblox.videochat.webrtc.callbacks.QBRTCClientSessionCallbacks;
 
+import org.jivesoftware.smack.SmackException;
+import org.jivesoftware.smack.XMPPException;
+
 import java.util.HashMap;
 import java.util.Map;
 
 import theokanning.rover.R;
+import theokanning.rover.bluetooth.BluetoothConnection;
+import theokanning.rover.bluetooth.BluetoothScanner;
 import theokanning.rover.ui.fragment.WaitingFragment;
 
 /**
  * Controls all call activity for the robot
  */
-public class RobotActivity extends BaseActivity implements QBRTCClientSessionCallbacks {
+public class RobotActivity extends BaseActivity implements QBRTCClientSessionCallbacks, BluetoothConnection.BluetoothConnectionListener {
 
     private static final String TAG = "RobotActivity";
 
     private QBPrivateChat privateChat;
+
+    private BluetoothScanner bluetoothScanner;
+    private BluetoothConnection bluetoothConnection;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,11 +78,11 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
         QBRTCConfig.setDebugEnabled(false);
     }
 
-    private void initChatClient(){
+    private void initChatClient() {
         QBPrivateChatManagerListener privateChatManagerListener = new QBPrivateChatManagerListener() {
             @Override
             public void chatCreated(final QBPrivateChat incomingPrivateChat, final boolean createdLocally) {
-                if(!createdLocally){
+                if (!createdLocally) {
                     privateChat = incomingPrivateChat;
                     privateChat.addMessageListener(privateChatMessageListener);
                 }
@@ -92,6 +101,66 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
         bundle.putString(WaitingFragment.WAITING_TEXT_EXTRA, "Waiting for connection...");
         fragment.setArguments(bundle);
         setFragment(fragment, true);
+    }
+
+    /**
+     * Show a waiting fragment to tell the user that the app is scanning for the robot over bluetooth
+     */
+    private void showScanningFragment() {
+        WaitingFragment fragment = new WaitingFragment();
+        Bundle bundle = new Bundle();
+        bundle.putString(WaitingFragment.WAITING_TEXT_EXTRA, "Scanning for robot");
+        fragment.setArguments(bundle);
+        setFragment(fragment, true);
+    }
+
+    private void scanForRobot() {
+        showScanningFragment();
+        bluetoothScanner = new BluetoothScanner(this);
+        bluetoothScanner.startScan(new BluetoothScanner.OnBluetoothDeviceDiscoveredListener() {
+            @Override
+            public void OnBluetoothDeviceDiscovered(BluetoothDevice device) {
+                if (device.getName().equals("Dexter")) {
+                    bluetoothConnection = new BluetoothConnection(device, RobotActivity.this);
+                    sendChatMessage("Found robot");
+                }
+            }
+        });
+    }
+
+    /**
+     * Sends a chat message
+     */
+    private void sendChatMessage(String message){
+        if(privateChat != null){
+            try {
+                privateChat.sendMessage(message);
+            } catch (XMPPException | SmackException.NotConnectedException e) {
+
+            }
+        }
+    }
+
+    /**
+     * Sends a diretional command to the robot after converting it to RL values
+     * @param direction direction robot should move
+     */
+    private void sendDirections(SteeringListener.Direction direction){
+        if(bluetoothConnection.isConnected()){
+            switch (direction){
+                case UP:
+                    bluetoothConnection.write("");
+                    break;
+                case DOWN:
+                    break;
+                case LEFT:
+                    break;
+                case RIGHT:
+                    break;
+            }
+        } else {
+            Log.d(TAG, "Can't send command, not connected to robot");
+        }
     }
 
     @Override
@@ -153,14 +222,29 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    Toast.makeText(RobotActivity.this, chatMessage.getBody(), Toast.LENGTH_SHORT).show();
+                    sendDirections(SteeringListener.Direction.valueOf(chatMessage.getBody()));
                 }
             });
         }
 
         @Override
-        public void processError(QBPrivateChat privateChat, QBChatException error, QBChatMessage originMessage){
+        public void processError(QBPrivateChat privateChat, QBChatException error, QBChatMessage originMessage) {
             Log.e(TAG, error.getMessage());
         }
     };
+
+    @Override
+    public void onMessageReceived(String message) {
+
+    }
+
+    @Override
+    public void onConnect() {
+
+    }
+
+    @Override
+    public void onDisconnect() {
+
+    }
 }

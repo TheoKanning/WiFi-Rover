@@ -72,13 +72,6 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
     }
 
     /**
-     * Creates a chat session with the robot and sends a hello message
-     */
-    private void createChatSession() {
-        sendChatMessage("Hello!");
-    }
-
-    /**
      * Gets the chat session and sends a text message
      *
      * @param message string to send over chat client
@@ -140,7 +133,6 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
         //Start call
         Log.d(TAG, "Starting call");
         currentSession.startCall(currentSession.getUserInfo());
-        createChatSession();
     }
 
     public void addVideoTrackCallbacksListener(QBRTCClientVideoTracksCallbacks videoTracksCallbacks) {
