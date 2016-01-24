@@ -211,6 +211,6 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
 
     @Override
     public void sendCommand(Direction direction) {
-        sendChatMessage(direction.asText());
+        sendChatMessage(direction.toString());
     }
 }

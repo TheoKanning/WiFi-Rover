@@ -23,7 +23,9 @@ public class BluetoothConnection {
 
     public interface BluetoothConnectionListener {
         void onMessageReceived(String message);
+
         void onConnect();
+
         void onDisconnect();
     }
 
@@ -53,13 +55,13 @@ public class BluetoothConnection {
         bluetoothHandler.post(connectThread);
     }
 
-    public void write(String message){
-        if(connectedThread != null){
+    public void write(String message) {
+        if (connectedThread != null) {
             connectedThread.write(message);
         }
     }
 
-    public void disconnect(){
+    public void disconnect() {
         connectThread.cancel();
     }
 
@@ -67,18 +69,19 @@ public class BluetoothConnection {
         return isConnected;
     }
 
-    private static class BluetoothHandler extends Handler{
+    private static class BluetoothHandler extends Handler {
         WeakReference<BluetoothConnectionListener> listenerWeakReference;
 
-        BluetoothHandler(BluetoothConnectionListener listener){
+        BluetoothHandler(BluetoothConnectionListener listener) {
             listenerWeakReference = new WeakReference<BluetoothConnectionListener>(listener);
         }
+
         @Override
         public void handleMessage(Message msg) {
-            switch (msg.what){
+            switch (msg.what) {
                 case MESSAGE_RECEIVED:
                     BluetoothConnectionListener listener = listenerWeakReference.get();
-                    if(listener != null) {
+                    if (listener != null) {
                         //Reading message not yet implemented
                         listener.onMessageReceived("Message Received");
                     }
@@ -106,7 +109,9 @@ public class BluetoothConnection {
             try {
                 // MY_UUID is the app's UUID string, also used by the server code
                 tmp = device.createRfcommSocketToServiceRecord(MY_UUID);
-            } catch (IOException e) { }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             bluetoothSocket = tmp;
         }
 
@@ -121,7 +126,9 @@ public class BluetoothConnection {
                 // Unable to connect; close the bluetoothSocket and get out
                 try {
                     bluetoothSocket.close();
-                } catch (IOException closeException) {  }
+                } catch (IOException closeException) {
+                    closeException.printStackTrace();
+                }
                 return;
             }
 
@@ -131,13 +138,16 @@ public class BluetoothConnection {
             connectedThread = new ConnectedThread(bluetoothSocket);
         }
 
-        /** Will cancel an in-progress connection, and close the bluetoothSocket */
+        /**
+         * Will cancel an in-progress connection, and close the bluetoothSocket
+         */
         public void cancel() {
             try {
                 bluetoothSocket.close();
                 isConnected = false;
                 bluetoothConnectionListener.onDisconnect();
-            } catch (IOException e) { }
+            } catch (IOException e) {
+            }
         }
     }
 
@@ -156,7 +166,8 @@ public class BluetoothConnection {
             try {
                 tmpIn = socket.getInputStream();
                 tmpOut = socket.getOutputStream();
-            } catch (IOException e) { }
+            } catch (IOException e) {
+            }
 
             inputStream = tmpIn;
             outputStream = tmpOut;
@@ -184,14 +195,16 @@ public class BluetoothConnection {
         public void write(String message) {
             try {
                 outputStream.write(message.getBytes());
-            } catch (IOException e) { }
+            } catch (IOException e) {
+            }
         }
 
         /* Call this from the main activity to shutdown the connection */
         public void cancel() {
             try {
                 bluetoothSocket.close();
-            } catch (IOException e) { }
+            } catch (IOException e) {
+            }
         }
     }
 }

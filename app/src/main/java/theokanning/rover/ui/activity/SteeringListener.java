@@ -2,10 +2,10 @@ package theokanning.rover.ui.activity;
 
 public interface SteeringListener {
     public enum Direction{
-        UP("up"),
-        DOWN("down"),
-        LEFT("left"),
-        RIGHT("right");
+        UP("UP"),
+        DOWN("DOWN"),
+        LEFT("LEFT"),
+        RIGHT("RIGHT");
 
         private String text;
 
