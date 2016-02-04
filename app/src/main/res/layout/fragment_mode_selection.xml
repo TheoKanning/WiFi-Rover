@@ -1,0 +1,25 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="theokanning.rover.ui.fragment.ModeSelectionFragment"
+    android:orientation="vertical"
+    android:gravity="center_vertical|center_horizontal">
+
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/mode_selection_driver"
+        android:id="@+id/driver"
+        android:layout_marginTop="@dimen/default_margin"
+        android:textAppearance="@style/Base.TextAppearance.AppCompat.Display1" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/mode_selection_robot"
+        android:id="@+id/robot"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="@dimen/default_margin"
+        android:textAppearance="@style/Base.TextAppearance.AppCompat.Display1" />
+</LinearLayout>
