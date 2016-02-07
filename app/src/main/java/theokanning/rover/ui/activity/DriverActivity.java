@@ -170,7 +170,8 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
 
     @Override
     public void onReceiveHangUpFromUser(QBRTCSession qbrtcSession, Integer integer) {
-
+        currentSession = null;
+        showConnectFragment();
     }
 
     @Override
@@ -180,6 +181,7 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
 
     @Override
     public void onSessionClosed(QBRTCSession qbrtcSession) {
+        Log.e(TAG, "Session closed");
         showConnectFragment();
     }
 

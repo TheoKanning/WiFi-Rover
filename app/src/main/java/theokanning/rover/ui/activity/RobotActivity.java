@@ -32,7 +32,7 @@ import theokanning.rover.bluetooth.BluetoothScanner;
 import theokanning.rover.ui.fragment.WaitingFragment;
 
 /**
- * Controls all call activity for the robot
+ * Controls all call activity for the robot. Only receives calls.
  */
 public class RobotActivity extends BaseActivity implements QBRTCClientSessionCallbacks, BluetoothConnection.BluetoothConnectionListener {
 
@@ -40,6 +40,7 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
     private static final int ROBOT_COMMAND_MAX = 255;
 
     private QBPrivateChat privateChat;
+    private QBRTCSession currentSession;
 
     private BluetoothScanner bluetoothScanner;
     private BluetoothConnection bluetoothConnection;
@@ -192,6 +193,7 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
 
                 // Accept incoming call
                 qbrtcSession.acceptCall(qbrtcSession.getUserInfo());
+                currentSession = qbrtcSession;
                 scanForRobot();
             }
         });
@@ -267,5 +269,13 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
     @Override
     public void onDisconnect() {
         sendChatMessage("Disconnected from robot");
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        if (currentSession != null) {
+            currentSession.hangUp(null);
+        }
     }
 }
