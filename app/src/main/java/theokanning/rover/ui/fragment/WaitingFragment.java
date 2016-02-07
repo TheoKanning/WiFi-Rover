@@ -22,6 +22,14 @@ public class WaitingFragment extends BaseFragment {
     @Bind(R.id.waiting_message)
     TextView waitingMessage;
 
+    public static WaitingFragment newInstance(String message){
+        WaitingFragment fragment = new WaitingFragment();
+        Bundle bundle = new Bundle();
+        bundle.putString(WAITING_TEXT_EXTRA, message);
+        fragment.setArguments(bundle);
+        return fragment;
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {

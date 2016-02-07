@@ -60,6 +60,12 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
         showWaitingFragment();
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+        QBRTCClient.getInstance(this).removeSessionsCallbacksListener(this);
+    }
+
     /**
      * Tells the client that this activity is prepared to process calls and sets this activity
      * as a listener for client callback
@@ -96,25 +102,26 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
     }
 
     /**
-     * Shows a waiting fragment to tell the user that the app is waiting for a connection
+     * Shows a waiting fragment to tell the user that the app is waiting for a connection from the
+     * driver device
      */
     private void showWaitingFragment() {
-        WaitingFragment fragment = new WaitingFragment();
-        Bundle bundle = new Bundle();
-        bundle.putString(WaitingFragment.WAITING_TEXT_EXTRA, "Waiting for connection...");
-        fragment.setArguments(bundle);
-        setFragment(fragment, true);
+        WaitingFragment fragment = WaitingFragment.newInstance("Waiting for connection...");
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .commit();
     }
 
     /**
      * Show a waiting fragment to tell the user that the app is scanning for the robot over bluetooth
      */
     private void showScanningFragment() {
-        WaitingFragment fragment = new WaitingFragment();
-        Bundle bundle = new Bundle();
-        bundle.putString(WaitingFragment.WAITING_TEXT_EXTRA, "Scanning for robot...");
-        fragment.setArguments(bundle);
-        setFragment(fragment, true);
+        WaitingFragment fragment = WaitingFragment.newInstance("Scanning for robot...");
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .commit();
     }
 
     private void scanForRobot() {
@@ -252,7 +259,7 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
         }
     };
 
-    private boolean connectedToRobot(){
+    private boolean connectedToRobot() {
         return bluetoothConnection != null && bluetoothConnection.isConnected();
     }
 

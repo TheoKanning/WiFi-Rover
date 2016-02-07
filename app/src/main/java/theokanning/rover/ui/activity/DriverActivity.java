@@ -106,10 +106,7 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
      * Shows waiting screen when starting call
      */
     private void showWaitingFragment() {
-        WaitingFragment fragment = new WaitingFragment();
-        Bundle bundle = new Bundle();
-        bundle.putString(WaitingFragment.WAITING_TEXT_EXTRA, "Attempting to connect to robot...");
-        fragment.setArguments(bundle);
+        WaitingFragment fragment = WaitingFragment.newInstance( "Attempting to connect to robot...");
         setFragment(fragment, true);
     }
 
