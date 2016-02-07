@@ -52,6 +52,12 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
         showConnectFragment();
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+        QBRTCClient.getInstance(this).removeSessionsCallbacksListener(this);
+    }
+
     private void initQbrtcClient() {
 
         QBChatService.getInstance().getVideoChatWebRTCSignalingManager()
@@ -107,7 +113,18 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
      */
     private void showWaitingFragment() {
         WaitingFragment fragment = WaitingFragment.newInstance( "Attempting to connect to robot...");
-        setFragment(fragment, true);
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .commit();
+    }
+
+    private void showControlFragment(){
+        ControlFragment fragment = new ControlFragment();
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .commit();
     }
 
     /**
@@ -138,6 +155,25 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
         }
     }
 
+    public void removeVideoTrackCallbacksListener(QBRTCClientVideoTracksCallbacks callbacks){
+        if(currentSession != null){
+            currentSession.removeVideoTrackCallbacksListener(callbacks);
+        }
+    }
+
+    public void setMicrophoneEnabled(boolean enabled){
+        if(currentSession != null){
+            currentSession.getMediaStreamManager().setAudioEnabled(enabled);
+        }
+    }
+
+    public void setStreamAudioEnabled(boolean enabled){
+        if(currentSession != null){
+            currentSession.getMediaStreamManager().switchAudioOutput();
+            //switches to headphones to mute sound...
+        }
+    }
+
     @Override
     public void onReceiveNewSession(QBRTCSession qbrtcSession) {
         //Should not happen
@@ -162,7 +198,7 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
         }
         Toast.makeText(this, "Connected to robot", Toast.LENGTH_SHORT).show();
         Log.d(TAG, "Connected successfully");
-        setFragment(new ControlFragment(), true);
+        showControlFragment();
     }
 
     @Override

@@ -223,7 +223,8 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
 
     @Override
     public void onReceiveHangUpFromUser(QBRTCSession qbrtcSession, Integer integer) {
-
+        currentSession = null;
+        showWaitingFragment();
     }
 
     @Override
@@ -281,6 +282,7 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
     @Override
     public void onBackPressed() {
         super.onBackPressed();
+        bluetoothScanner.stopScan();
         if (currentSession != null) {
             currentSession.hangUp(null);
         }

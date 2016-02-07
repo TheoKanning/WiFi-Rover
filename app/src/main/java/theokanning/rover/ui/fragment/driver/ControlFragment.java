@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ToggleButton;
 
 import com.quickblox.videochat.webrtc.QBRTCSession;
 import com.quickblox.videochat.webrtc.callbacks.QBRTCClientVideoTracksCallbacks;
@@ -17,6 +18,7 @@ import org.webrtc.VideoRenderer;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 import butterknife.OnTouch;
 import theokanning.rover.R;
 import theokanning.rover.ui.activity.DriverActivity;
@@ -33,6 +35,9 @@ public class ControlFragment extends BaseFragment implements QBRTCClientVideoTra
     @Bind(R.id.videoView)
     public RTCGLVideoView videoView;
 
+    @Bind(R.id.audio_toggle)
+    ToggleButton audioToggle;
+
     private SteeringListener steeringListener;
 
     private Direction currentDirection;
@@ -47,18 +52,6 @@ public class ControlFragment extends BaseFragment implements QBRTCClientVideoTra
         ((DriverActivity) getActivity()).addVideoTrackCallbacksListener(this);
         steeringListener = (SteeringListener) getActivity();
         return view;
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        handler.post(directionsRunnable);
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        handler.removeCallbacks(directionsRunnable);
     }
 
     @Override
@@ -126,7 +119,6 @@ public class ControlFragment extends BaseFragment implements QBRTCClientVideoTra
         }
     }
 
-
     /**
      * Sends a direction command to the SteeringListener
      *
@@ -136,5 +128,35 @@ public class ControlFragment extends BaseFragment implements QBRTCClientVideoTra
         if (direction != null) {
             steeringListener.sendCommand(direction);
         }
+    }
+
+    @OnClick(R.id.audio_toggle)
+    public void toggleAudio(View view){
+        boolean enabled = ((ToggleButton) view).isChecked();
+        ((DriverActivity) getActivity()).setStreamAudioEnabled(enabled);
+    }
+
+    @OnClick(R.id.mic_toggle)
+    public void toggleMicrophone(View view){
+        boolean enabled = ((ToggleButton) view).isChecked();
+        ((DriverActivity) getActivity()).setMicrophoneEnabled(enabled);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        handler.post(directionsRunnable);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        handler.removeCallbacks(directionsRunnable);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        ((DriverActivity) getActivity()).removeVideoTrackCallbacksListener(this);
     }
 }

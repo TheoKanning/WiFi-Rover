@@ -13,6 +13,27 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
+        <ToggleButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/audio_toggle"
+            android:textOff=""
+            android:textOn=""
+            android:checked="true"
+            android:background="@drawable/audio_toggle_selector"/>
+
+        <ToggleButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/mic_toggle"
+            android:textOff=""
+            android:textOn=""
+            android:checked="true"
+            android:background="@drawable/mic_toggle_selector"
+            android:layout_alignParentTop="true"
+            android:layout_toRightOf="@+id/audio_toggle"
+            android:layout_toEndOf="@+id/audio_toggle" />
+
         <TextView
             android:id="@+id/up"
             android:layout_width="wrap_content"
