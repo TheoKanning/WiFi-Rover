@@ -57,7 +57,6 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
         initQbrtcClient();
         initChatClient();
         showWaitingFragment();
-        usbScanner.startScan();
     }
 
     @Override
@@ -166,7 +165,7 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
                     left = ROBOT_COMMAND_MAX / 2;
                     break;
             }
-            String bluetoothCommand = "L" + left + "\rR" + right + "\r";
+            String bluetoothCommand = "(" + left + "," + right +")";
             usbScanner.write(bluetoothCommand);
         } else {
             Log.d(TAG, "Can't send command, not connected to robot");
@@ -258,6 +257,11 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
     @Override
     public void onDisconnect() {
         sendChatMessage("Disconnected from robot");
+    }
+
+    @Override
+    public void onMessageReceived(String message) {
+        Log.d(TAG, "Received message: " + message);
     }
 
     @Override

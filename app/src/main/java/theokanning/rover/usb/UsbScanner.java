@@ -27,8 +27,8 @@ public class UsbScanner {
 
     public interface UsbScannerListener {
         void onConnect();
-
         void onDisconnect();
+        void onMessageReceived(String message);
     }
 
     private static final String TAG = "UsbScanner";
@@ -123,6 +123,7 @@ public class UsbScanner {
             String data = null;
             try {
                 data = new String(arg0, "UTF-8");
+                listener.onMessageReceived(data);
                 Log.e(TAG, "Message received: " + data);
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();

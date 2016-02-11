@@ -11,7 +11,11 @@
 #define PWM_MIN -255
 #define PWM_MAX  255
 #define MIN_SPEED 50
-#define TIMEOUT 1000
+#define TIMEOUT 100
+
+#define COMMAND_START '('
+#define COMMAND_END ')'
+#define COMMAND_SEPARATOR ','
 
 Adafruit_MotorShield motorManager;
 Adafruit_DCMotor *motorFrontLeft;
@@ -23,21 +27,25 @@ int rightSideMotorSpeedCommand;
 int leftSideMotorSpeedCommand;
 long lastUpdateTimeMs = millis();
 
+String serialBuffer = "";
+
 
 void setup() {
   Serial.begin(115200);
-  Serial.println("Starting setup");
+  Serial.print("Starting setup");
   initMotors();
 }
 /*
 * Loads serial data if available, releases motors after 1 second with data
 */
 void loop() {
-  if(readSerialData()){
+  readSerialDataIntoBuffer();
+  if(commandAvailable()){
+    readCommandsFromBuffer();
     lastUpdateTimeMs = millis();
     setMotorSpeeds(rightSideMotorSpeedCommand, leftSideMotorSpeedCommand);
   } else if(millis() - lastUpdateTimeMs > TIMEOUT) {
-    Serial.println("Timed out, releasing motors");
+    //Serial.println("Timed out");
     lastUpdateTimeMs = millis();
     releaseMotors();
   }
@@ -86,45 +94,46 @@ void releaseMotors(){
   motorFrontRight->run(RELEASE);
 }
 
-/* 
-* Reads available bluetooth serial data and returns true if a complete set has been read
-* Updates rightSideMotorSpeedCommand and leftSideMotorSpeedCommand global variables
-*/
-boolean readSerialData(){
-  const int leftBit = 1;
-  const int rightBit = 2;
-  const int doneBit = 3;
-  
-  /* Temporary variable for storing progress, 
-  * done == doneBit once right and left each been read at least once
-  * Uses OR instead of + to prevent errors if one side is read multiple times
-  * Ex. done = 0: done |= rightBit; done |= rightBit; done |= rightBit; done == 1
-  * done = 0; done += rightBit; done += rightBit; done += rightBit; done == 3; <-- Considered complete without reading ledt side
-  */
-  int done = 0; 
-  char buffer = '\0';
-  
-  while(Serial.available() > 0 && done != doneBit){
-    buffer = Serial.read();
-    switch(buffer){
-      case 'R':
-        rightSideMotorSpeedCommand = constrain(Serial.parseFloat(), PWM_MIN, PWM_MAX);
-        done |= rightBit;
-        break;
-      case 'L':
-        leftSideMotorSpeedCommand = constrain(Serial.parseFloat(), PWM_MIN, PWM_MAX);
-        done |= leftBit;
-        break;
-    }
-  } 
-  if(done == doneBit) {
-    Serial.flush();
-    //Serial.print("Right:"); Serial.print(rightSideMotorSpeedCommand); 
-    //Serial.print(" Left:"); Serial.println(leftSideMotorSpeedCommand);
-    return true;
-  } else {
-    rightSideMotorSpeedCommand = 0;
-    leftSideMotorSpeedCommand = 0; 
+void readSerialDataIntoBuffer(){
+  while(Serial.available()){
+    serialBuffer += (char)Serial.read();
+  }
+}
+
+//Return true if buffer contains command start and stop
+boolean commandAvailable() {
+  int startIndex = serialBuffer.indexOf(COMMAND_START);
+  int endIndex = serialBuffer.indexOf(COMMAND_END);
+
+  if (startIndex == -1 || endIndex == -1){
     return false;
   }
+
+  //if end character is before start, remove everything until the start
+  if(startIndex > endIndex) {
+    serialBuffer = serialBuffer.substring(startIndex);
+    return false;
+  }
+  
+  return true;
+}
+
+boolean readCommandsFromBuffer(){
+  int startIndex = serialBuffer.indexOf(COMMAND_START);
+  int endIndex = serialBuffer.indexOf(COMMAND_END);
+
+  String command = serialBuffer.substring(startIndex+1, endIndex);
+  serialBuffer = serialBuffer.substring(endIndex); //remove current command
+  
+  int separatorIndex = command.indexOf(COMMAND_SEPARATOR);
+  String right = command.substring(0, separatorIndex);
+  int rightCommand = right.toInt();
+  rightSideMotorSpeedCommand = constrain(rightCommand, PWM_MIN, PWM_MAX);
+
+  String left = command.substring(separatorIndex + 1);
+  int leftCommand = left.toInt();
+  leftSideMotorSpeedCommand = constrain(leftCommand, PWM_MIN, PWM_MAX);
+        
+  //Serial.print("Right:"); Serial.print(rightSideMotorSpeedCommand); 
+  //Serial.print(" Left:"); Serial.println(leftSideMotorSpeedCommand);
 }
