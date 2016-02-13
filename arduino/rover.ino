@@ -3,10 +3,10 @@
 #include <Adafruit_MotorShield.h>
 #include "utility/Adafruit_PWMServoDriver.h"
 
-#define FRONT_LEFT_MOTOR_NUMBER   1
-#define BACK_LEFT_MOTOR_NUMBER    2
-#define BACK_RIGHT_MOTOR_NUMBER   3
-#define FRONT_RIGHT_MOTOR_NUMBER  4
+#define FRONT_LEFT_MOTOR_NUMBER   4
+#define BACK_LEFT_MOTOR_NUMBER    1
+#define BACK_RIGHT_MOTOR_NUMBER   2
+#define FRONT_RIGHT_MOTOR_NUMBER  3
 
 #define PWM_MIN -255
 #define PWM_MAX  255
