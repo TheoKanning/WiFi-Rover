@@ -1,6 +1,5 @@
 package theokanning.rover.ui.activity;
 
-import android.bluetooth.BluetoothDevice;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
@@ -27,14 +26,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 import theokanning.rover.R;
-import theokanning.rover.bluetooth.BluetoothConnection;
-import theokanning.rover.bluetooth.BluetoothScanner;
 import theokanning.rover.ui.fragment.WaitingFragment;
+import theokanning.rover.usb.UsbScanner;
 
 /**
  * Controls all call activity for the robot. Only receives calls.
  */
-public class RobotActivity extends BaseActivity implements QBRTCClientSessionCallbacks, BluetoothConnection.BluetoothConnectionListener {
+public class RobotActivity extends BaseActivity implements QBRTCClientSessionCallbacks, UsbScanner.UsbScannerListener {
 
     private static final String TAG = "RobotActivity";
     private static final int ROBOT_COMMAND_MAX = 255;
@@ -42,14 +40,15 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
     private QBPrivateChat privateChat;
     private QBRTCSession currentSession;
 
-    private BluetoothScanner bluetoothScanner;
-    private BluetoothConnection bluetoothConnection;
+    private UsbScanner usbScanner;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_robot);
+        usbScanner = new UsbScanner(this);
+        usbScanner.registerListener(this);
     }
 
     @Override
@@ -63,6 +62,8 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
     @Override
     protected void onStop() {
         super.onStop();
+        usbScanner.unregisterListener();
+        usbScanner.close();
         QBRTCClient.getInstance(this).removeSessionsCallbacksListener(this);
     }
 
@@ -124,22 +125,6 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
                 .commit();
     }
 
-    private void scanForRobot() {
-        Log.d(TAG, "Starting scan for robot");
-        showScanningFragment();
-        bluetoothScanner = new BluetoothScanner(this);
-        bluetoothScanner.startScan(new BluetoothScanner.OnBluetoothDeviceDiscoveredListener() {
-            @Override
-            public void OnBluetoothDeviceDiscovered(BluetoothDevice device) {
-                Log.d(TAG, "Bluetooth device found: " + device.getName());
-                if (device.getName().equals("Dexter")) {
-                    bluetoothConnection = new BluetoothConnection(device, RobotActivity.this);
-                    sendChatMessage("Found robot");
-                }
-            }
-        });
-    }
-
     /**
      * Sends a chat message
      */
@@ -180,8 +165,8 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
                     left = ROBOT_COMMAND_MAX / 2;
                     break;
             }
-            String bluetoothCommand = "L" + left + "\rR" + right + "\r";
-            bluetoothConnection.write(bluetoothCommand);
+            String bluetoothCommand = "(" + left + "," + right +")";
+            usbScanner.write(bluetoothCommand);
         } else {
             Log.d(TAG, "Can't send command, not connected to robot");
         }
@@ -201,7 +186,7 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
                 // Accept incoming call
                 qbrtcSession.acceptCall(qbrtcSession.getUserInfo());
                 currentSession = qbrtcSession;
-                scanForRobot();
+                usbScanner.startScan();
             }
         });
     }
@@ -261,12 +246,7 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
     };
 
     private boolean connectedToRobot() {
-        return bluetoothConnection != null && bluetoothConnection.isConnected();
-    }
-
-    @Override
-    public void onMessageReceived(String message) {
-
+        return usbScanner.isConnected();
     }
 
     @Override
@@ -280,9 +260,13 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
     }
 
     @Override
+    public void onMessageReceived(String message) {
+        Log.d(TAG, "Received message: " + message);
+    }
+
+    @Override
     public void onBackPressed() {
         super.onBackPressed();
-        bluetoothScanner.stopScan();
         if (currentSession != null) {
             currentSession.hangUp(null);
         }
