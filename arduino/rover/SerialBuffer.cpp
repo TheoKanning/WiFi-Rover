@@ -28,13 +28,13 @@ void SerialBuffer::addToBuffer(char next)
   _buffer += next;
 }
 
-SerialMessage* SerialBuffer::getCommand()
+void SerialBuffer::getCommand(SerialMessage *message)
 {
   String command = popFirstCommandString();
   char commandType = command.charAt(0);
   String commandContents = command.substring(1);
-  SerialMessage *message = new SerialMessage(commandType, commandContents);
-  return message;
+  message->_command = commandType;
+  message->_contents = commandContents;
 }
 
 String SerialBuffer::popFirstCommandString(){

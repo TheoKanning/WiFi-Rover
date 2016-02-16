@@ -2,7 +2,6 @@
 #include <Wire.h>
 #include <Adafruit_MotorShield.h>
 #include "SerialBuffer.h"
-#include "SerialMessage.h"
 
 #define FRONT_LEFT_MOTOR_NUMBER   2
 #define BACK_LEFT_MOTOR_NUMBER    3
@@ -29,6 +28,7 @@ int leftMotorSpeed;
 long lastUpdateTimeMs = millis();
 
 SerialBuffer *serialBuffer = new SerialBuffer();
+SerialMessage *message = new SerialMessage();
 
 void setup() {
   Serial.begin(115200);
@@ -42,10 +42,8 @@ void setup() {
 void loop() {
   readSerialDataIntoBuffer();
   if(serialBuffer->hasCommand()){
-    SerialMessage* command = serialBuffer->getCommand();
-    Serial.println(command->getCommand());
-    Serial.println(command->getContents());
-    performCommand(command);
+    serialBuffer->getCommand(message);
+    performCommand(message);
     lastUpdateTimeMs = millis();
     setMotorSpeeds();
   } else if(millis() - lastUpdateTimeMs > TIMEOUT) {
@@ -62,7 +60,6 @@ void initMotors(){
   motorBackLeft    = motorManager.getMotor(BACK_LEFT_MOTOR_NUMBER);
   motorBackRight   = motorManager.getMotor(BACK_RIGHT_MOTOR_NUMBER);
   motorFrontRight  = motorManager.getMotor(FRONT_RIGHT_MOTOR_NUMBER);
-  
   motorManager.begin();
   releaseMotors();
 }
@@ -75,8 +72,8 @@ void readSerialDataIntoBuffer(){
 }
 
 void performCommand(SerialMessage* message){
-  String contents = message->getContents();
-  switch(message->getCommand()){
+  String contents = message->_contents;
+  switch(message->_command){
     case RIGHT_MOTOR_COMMAND:
       setRightMotorSpeed(contents.toInt());
       break;
