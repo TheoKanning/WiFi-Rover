@@ -33,8 +33,8 @@ SerialMessage* SerialBuffer::getCommand()
   String command = popFirstCommandString();
   char commandType = command.charAt(0);
   String commandContents = command.substring(1);
-  SerialMessage *output = new SerialMessage(commandType, commandContents);
-  return output;
+  SerialMessage *message = new SerialMessage(commandType, commandContents);
+  return message;
 }
 
 String SerialBuffer::popFirstCommandString(){

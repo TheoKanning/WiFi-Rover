@@ -4,10 +4,10 @@
 #include "SerialBuffer.h"
 #include "SerialMessage.h"
 
-#define FRONT_LEFT_MOTOR_NUMBER   4
-#define BACK_LEFT_MOTOR_NUMBER    1
-#define BACK_RIGHT_MOTOR_NUMBER   2
-#define FRONT_RIGHT_MOTOR_NUMBER  3
+#define FRONT_LEFT_MOTOR_NUMBER   2
+#define BACK_LEFT_MOTOR_NUMBER    3
+#define BACK_RIGHT_MOTOR_NUMBER   4
+#define FRONT_RIGHT_MOTOR_NUMBER  1
 
 #define PWM_MIN -255
 #define PWM_MAX  255
@@ -28,21 +28,21 @@ int rightMotorSpeed;
 int leftMotorSpeed;
 long lastUpdateTimeMs = millis();
 
-String serialBuffer = "";
-SerialBuffer *serialBufferTest = new SerialBuffer();
+SerialBuffer *serialBuffer = new SerialBuffer();
 
 void setup() {
   Serial.begin(115200);
   Serial.println("Starting setup");
   initMotors();
 }
+
 /*
 * Loads serial data if available, releases motors after 1 second with data
 */
 void loop() {
   readSerialDataIntoBuffer();
-  if(serialBufferTest->hasCommand()){
-    SerialMessage* command = serialBufferTest->getCommand();
+  if(serialBuffer->hasCommand()){
+    SerialMessage* command = serialBuffer->getCommand();
     Serial.println(command->getCommand());
     Serial.println(command->getContents());
     performCommand(command);
@@ -51,6 +51,7 @@ void loop() {
   } else if(millis() - lastUpdateTimeMs > TIMEOUT) {
     //Serial.println("Timed out");
     lastUpdateTimeMs = millis();
+    resetSpeeds();
     releaseMotors();
   }
 }
@@ -66,32 +67,11 @@ void initMotors(){
   releaseMotors();
 }
 
-
-
 void readSerialDataIntoBuffer(){
   while(Serial.available()){
     char next = (char) Serial.read();
-    serialBuffer += next;
-    serialBufferTest->addToBuffer(next);
+    serialBuffer->addToBuffer(next);
   }
-}
-
-//Return true if buffer contains command start and stop
-boolean commandAvailable() {
-  int startIndex = serialBuffer.indexOf(COMMAND_START);
-  int endIndex = serialBuffer.indexOf(COMMAND_END);
-
-  if (startIndex == -1 || endIndex == -1){
-    return false;
-  }
-
-  //if end character is before start, remove everything until the start
-  if(startIndex > endIndex) {
-    serialBuffer = serialBuffer.substring(startIndex);
-    return false;
-  }
-  
-  return true;
 }
 
 void performCommand(SerialMessage* message){
@@ -106,29 +86,8 @@ void performCommand(SerialMessage* message){
   }
 }
 
-boolean readCommandsFromBuffer(){
-  int startIndex = serialBuffer.indexOf(COMMAND_START);
-  int endIndex = serialBuffer.indexOf(COMMAND_END);
-
-  String command = serialBuffer.substring(startIndex+1, endIndex);
-  serialBuffer = serialBuffer.substring(endIndex); //remove current command
-  
-  int separatorIndex = command.indexOf(COMMAND_SEPARATOR);
-  String right = command.substring(0, separatorIndex);
-  int rightCommand = right.toInt();
-  
-
-  String left = command.substring(separatorIndex + 1);
-  int leftCommand = left.toInt();
-  leftMotorSpeed = constrain(leftCommand, PWM_MIN, PWM_MAX);
-        
-  //Serial.print("Right:"); Serial.print(rightMotorSpeed); 
-  //Serial.print(" Left:"); Serial.println(leftMotorSpeed);
-}
-
 void setRightMotorSpeed(int motorSpeed){
   rightMotorSpeed = constrain(motorSpeed, PWM_MIN, PWM_MAX);
-  Serial.print("Setting right side speed to "); Serial.println(rightMotorSpeed);
 }
 
 void setLeftMotorSpeed(int motorSpeed){
@@ -156,6 +115,11 @@ void setSingleMotorSpeed(Adafruit_DCMotor *motor, int motorSpeed){
     motor->setSpeed(abs(motorSpeed));
     motor->run(BACKWARD);
   }
+}
+
+void resetSpeeds(){
+  rightMotorSpeed = 0;
+  leftMotorSpeed = 0;
 }
 
 void releaseMotors(){

@@ -35,7 +35,7 @@ import theokanning.rover.usb.UsbScanner;
 public class RobotActivity extends BaseActivity implements QBRTCClientSessionCallbacks, UsbScanner.UsbScannerListener {
 
     private static final String TAG = "RobotActivity";
-    private static final int ROBOT_COMMAND_MAX = 255;
+    private static final int ROBOT_COMMAND_MAX = 200;
 
     private QBPrivateChat privateChat;
     private QBRTCSession currentSession;
@@ -168,8 +168,7 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
             }
             //todo refactor start and end characters into usb message class
             String bluetoothCommand = "(" + left + "," + right +")";
-            usbScanner.write("(R" + right + ")");
-            usbScanner.write("(L" + left + ")");
+            usbScanner.write("(R" + right + ")(L" + left + ")");
         } else {
             Log.d(TAG, "Can't send command, not connected to robot");
         }
