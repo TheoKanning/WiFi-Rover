@@ -35,7 +35,7 @@ import theokanning.rover.usb.UsbScanner;
 public class RobotActivity extends BaseActivity implements QBRTCClientSessionCallbacks, UsbScanner.UsbScannerListener {
 
     private static final String TAG = "RobotActivity";
-    private static final int ROBOT_COMMAND_MAX = 255;
+    private static final int ROBOT_COMMAND_MAX = 200;
 
     private QBPrivateChat privateChat;
     private QBRTCSession currentSession;
@@ -144,6 +144,7 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
      * @param direction direction robot should move
      */
     private void sendDirections(SteeringListener.Direction direction) {
+        //todo change to sending percent value -100 to 100
         if (connectedToRobot()) {
             int left = 0;
             int right = 0;
@@ -165,8 +166,9 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
                     left = ROBOT_COMMAND_MAX / 2;
                     break;
             }
+            //todo refactor start and end characters into usb message class
             String bluetoothCommand = "(" + left + "," + right +")";
-            usbScanner.write(bluetoothCommand);
+            usbScanner.write("(R" + right + ")(L" + left + ")");
         } else {
             Log.d(TAG, "Can't send command, not connected to robot");
         }
@@ -177,10 +179,11 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
+                //todo new fragment to show that phone is connected
                 Toast.makeText(RobotActivity.this, "Call received", Toast.LENGTH_SHORT).show();
                 Log.d(TAG, "Call received");
 
-                Map<String, String> userInfo = new HashMap<>();
+                Map<String, String> userInfo = new HashMap<>(); //todo this might be unnecessary
                 userInfo.put("Key", "Robot");
 
                 // Accept incoming call

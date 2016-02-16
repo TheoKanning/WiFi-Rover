@@ -73,6 +73,7 @@ public class ModeSelectionActivity extends BaseActivity implements ModeSelection
 
         showLoggingIn();
 
+        //todo rearrange nested listeners
         QBAuth.createSession(qbUser, new QBEntityCallbackImpl<QBSession>() {
             @Override
             public void onSuccess(QBSession result, Bundle params) {
