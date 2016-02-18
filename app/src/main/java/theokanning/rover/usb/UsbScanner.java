@@ -27,12 +27,14 @@ public class UsbScanner {
 
     public interface UsbScannerListener {
         void onConnect();
+
         void onDisconnect();
+
         void onMessageReceived(String message);
     }
 
     private static final String TAG = "UsbScanner";
-    private static final String ACTION_USB_PERMISSION = "com.blecentral.USB_PERMISSION";
+    private static final String ACTION_USB_PERMISSION = "com.blecentral.USB_PERMISSION"; //todo change text
 
     private Context context;
 
@@ -44,14 +46,14 @@ public class UsbScanner {
         this.context = context;
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_USB_PERMISSION);
-        context.registerReceiver(mUsbReceiver, filter);
+        context.registerReceiver(usbReceiver, filter);
     }
 
     public void registerListener(UsbScannerListener listener) {
         this.listener = listener;
     }
 
-    public void unregisterListener(){
+    public void unregisterListener() {
         this.listener = null;
     }
 
@@ -84,53 +86,63 @@ public class UsbScanner {
         listener.onConnect();
     }
 
-    public boolean isConnected(){
+    public boolean isConnected() {
         return serialPort != null;
     }
 
-    public void configureSerialPort(){
-        if(serialPort.open()){
+    public void configureSerialPort() {
+        if (serialPort.open()) {
             serialPort.setBaudRate(115200);
             serialPort.setDataBits(UsbSerialInterface.DATA_BITS_8);
             serialPort.setStopBits(UsbSerialInterface.STOP_BITS_1);
             serialPort.setParity(UsbSerialInterface.PARITY_NONE);
             serialPort.setFlowControl(UsbSerialInterface.FLOW_CONTROL_OFF);
-            serialPort.read(callback); //
+            serialPort.read(callback);
             Toast.makeText(context, "Serial port opened", Toast.LENGTH_SHORT).show();
         } else {
             Toast.makeText(context, "Serial port not open", Toast.LENGTH_SHORT).show();
         }
     }
 
-    public void write(String message){
-        if(serialPort != null) {
+    public void write(String message) {
+        if (serialPort != null) {
             serialPort.write(message.getBytes());
         }
     }
 
-    public void close(){
-        if(serialPort != null){
+    public void close() {
+        if (serialPort != null) {
             serialPort.close();
         }
-        context.unregisterReceiver(mUsbReceiver);
+        context.unregisterReceiver(usbReceiver);
     }
 
     private UsbSerialInterface.UsbReadCallback callback = new UsbSerialInterface.UsbReadCallback() {
-        //Defining a Callback which triggers whenever data is read.
         @Override
-        public void onReceivedData(byte[] arg0) {
-            String data = null;
-            try {
-                data = new String(arg0, "UTF-8");
-                listener.onMessageReceived(data);
-                Log.e(TAG, "Message received: " + data);
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            }
+        public void onReceivedData(byte[] bytes) {
+            String data = tryEncodingBytesAsString(bytes);
+            sendMessageToListener(data);
+            Log.e(TAG, "Message received: " + data);
         }
     };
 
-    private final BroadcastReceiver mUsbReceiver = new BroadcastReceiver() {
+    private String tryEncodingBytesAsString(byte[] bytes) {
+        String data = "";
+        try {
+            data = new String(bytes, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        return data;
+    }
+
+    private void sendMessageToListener(String data) {
+        if (listener != null) {
+            listener.onMessageReceived(data);
+        }
+    }
+
+    private final BroadcastReceiver usbReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             if (ACTION_USB_PERMISSION.equals(action)) {

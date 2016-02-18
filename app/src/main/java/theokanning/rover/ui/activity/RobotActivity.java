@@ -63,8 +63,8 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
     @Override
     protected void onStop() {
         super.onStop();
-        usbScanner.unregisterListener();
         usbScanner.close();
+        usbScanner.unregisterListener();
         QBRTCClient.getInstance(this).removeSessionsCallbacksListener(this);
     }
 
@@ -264,7 +264,12 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
     @Override
     public void onConnect() {
         sendChatMessage("Connected to robot");
-        showConnectedFragment();
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                showConnectedFragment();
+            }
+        });
     }
 
     @Override
