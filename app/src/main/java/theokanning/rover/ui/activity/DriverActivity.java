@@ -84,6 +84,7 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
      */
     private void sendChatMessage(String message) {
         if (privateChat == null) {
+            //todo this should be in its own method
             Integer opponentId = User.ROBOT.getId();
             privateChat = QBChatService.getInstance()
                     .getPrivateChatManager()
@@ -91,6 +92,7 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
         }
 
         try {
+            //todo wrap in method
             QBChatMessage chatMessage = new QBChatMessage();
             chatMessage.setBody(message);
             privateChat.sendMessage(chatMessage);
@@ -196,7 +198,7 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
             Log.e(TAG, "Call accepted for incorrect session");
             return;
         }
-        Toast.makeText(this, "Connected to robot", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Starting video chat", Toast.LENGTH_SHORT).show();
         Log.d(TAG, "Connected successfully");
         showControlFragment();
     }

@@ -27,6 +27,7 @@ import java.util.Map;
 
 import theokanning.rover.R;
 import theokanning.rover.ui.fragment.WaitingFragment;
+import theokanning.rover.ui.fragment.robot.ConnectedFragment;
 import theokanning.rover.usb.UsbScanner;
 
 /**
@@ -62,8 +63,8 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
     @Override
     protected void onStop() {
         super.onStop();
-        usbScanner.unregisterListener();
         usbScanner.close();
+        usbScanner.unregisterListener();
         QBRTCClient.getInstance(this).removeSessionsCallbacksListener(this);
     }
 
@@ -118,7 +119,15 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
      * Show a waiting fragment to tell the user that the app is scanning for the robot over bluetooth
      */
     private void showScanningFragment() {
-        WaitingFragment fragment = WaitingFragment.newInstance("Scanning for robot...");
+        WaitingFragment fragment = WaitingFragment.newInstance("Connecting to robot...");
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .commit();
+    }
+
+    private void showConnectedFragment() {
+        ConnectedFragment fragment = ConnectedFragment.newInstance();
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.fragment_container, fragment)
@@ -179,7 +188,6 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                //todo new fragment to show that phone is connected
                 Toast.makeText(RobotActivity.this, "Call received", Toast.LENGTH_SHORT).show();
                 Log.d(TAG, "Call received");
 
@@ -190,6 +198,7 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
                 qbrtcSession.acceptCall(qbrtcSession.getUserInfo());
                 currentSession = qbrtcSession;
                 usbScanner.startScan();
+                showScanningFragment();
             }
         });
     }
@@ -255,6 +264,12 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
     @Override
     public void onConnect() {
         sendChatMessage("Connected to robot");
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                showConnectedFragment();
+            }
+        });
     }
 
     @Override
