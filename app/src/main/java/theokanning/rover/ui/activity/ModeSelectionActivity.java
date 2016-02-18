@@ -53,10 +53,7 @@ public class ModeSelectionActivity extends BaseActivity implements ModeSelection
      * Shows a waiting screen when logging in
      */
     private void showLoggingIn(){
-        WaitingFragment fragment = new WaitingFragment();
-        Bundle bundle = new Bundle();
-        bundle.putString(WaitingFragment.WAITING_TEXT_EXTRA, "Logging in to chat service...");
-        fragment.setArguments(bundle);
+        WaitingFragment fragment = WaitingFragment.newInstance("Logging in to chat service...");
         setFragment(fragment, true);
     }
 

@@ -38,7 +38,6 @@ public class UsbScanner {
 
     private UsbSerialDevice serialPort;
 
-
     private UsbScannerListener listener;
 
     public UsbScanner(Context context) {
