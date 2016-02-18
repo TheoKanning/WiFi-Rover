@@ -119,7 +119,7 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
      * Show a waiting fragment to tell the user that the app is scanning for the robot over bluetooth
      */
     private void showScanningFragment() {
-        WaitingFragment fragment = WaitingFragment.newInstance("Scanning for robot...");
+        WaitingFragment fragment = WaitingFragment.newInstance("Connecting to robot...");
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.fragment_container, fragment)
