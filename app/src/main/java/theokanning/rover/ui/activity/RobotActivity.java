@@ -8,6 +8,7 @@ import com.quickblox.chat.QBChatService;
 import com.quickblox.chat.QBPrivateChat;
 import com.quickblox.chat.QBPrivateChatManager;
 import com.quickblox.chat.QBSignaling;
+import com.quickblox.chat.QBVideoChatWebRTCSignalingManager;
 import com.quickblox.chat.QBWebRTCSignaling;
 import com.quickblox.chat.exception.QBChatException;
 import com.quickblox.chat.listeners.QBMessageListener;
@@ -15,7 +16,6 @@ import com.quickblox.chat.listeners.QBPrivateChatManagerListener;
 import com.quickblox.chat.listeners.QBVideoChatSignalingManagerListener;
 import com.quickblox.chat.model.QBChatMessage;
 import com.quickblox.videochat.webrtc.QBRTCClient;
-import com.quickblox.videochat.webrtc.QBRTCConfig;
 import com.quickblox.videochat.webrtc.QBRTCSession;
 import com.quickblox.videochat.webrtc.callbacks.QBRTCClientSessionCallbacks;
 
@@ -25,7 +25,10 @@ import org.jivesoftware.smack.XMPPException;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.inject.Inject;
+
 import theokanning.rover.R;
+import theokanning.rover.RoverApplication;
 import theokanning.rover.ui.fragment.WaitingFragment;
 import theokanning.rover.ui.fragment.robot.ConnectedFragment;
 import theokanning.rover.usb.UsbScanner;
@@ -38,25 +41,25 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
     private static final String TAG = "RobotActivity";
     private static final int ROBOT_COMMAND_MAX = 200;
 
+    @Inject
+    UsbScanner usbScanner;
+
     private QBPrivateChat privateChat;
     private QBRTCSession currentSession;
-
-    private UsbScanner usbScanner;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_robot);
-        usbScanner = new UsbScanner(this);
-        usbScanner.registerListener(this);
+        ((RoverApplication) getApplication()).getComponent().inject(this);
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        initQbrtcClient();
-        initChatClient();
+        initVideoChatClient();
+        initPrivateChatClient();
+        usbScanner.registerListener(this);
         showWaitingFragment();
     }
 
@@ -68,28 +71,14 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
         QBRTCClient.getInstance(this).removeSessionsCallbacksListener(this);
     }
 
-    /**
-     * Tells the client that this activity is prepared to process calls and sets this activity
-     * as a listener for client callback
-     */
-    private void initQbrtcClient() {
+    private void initVideoChatClient() {
         QBRTCClient.getInstance(this).prepareToProcessCalls();
         QBRTCClient.getInstance(this).addSessionCallbacksListener(this);
 
-        QBChatService.getInstance().getVideoChatWebRTCSignalingManager()
-                .addSignalingManagerListener(new QBVideoChatSignalingManagerListener() {
-                    @Override
-                    public void signalingCreated(QBSignaling qbSignaling, boolean createdLocally) {
-                        if (!createdLocally) {
-                            QBRTCClient.getInstance(RobotActivity.this).addSignaling((QBWebRTCSignaling) qbSignaling);
-                        }
-                    }
-                });
-
-        QBRTCConfig.setDebugEnabled(false);
+        enableReceivingVideoCalls();
     }
 
-    private void initChatClient() {
+    private void initPrivateChatClient() {
         QBPrivateChatManagerListener privateChatManagerListener = new QBPrivateChatManagerListener() {
             @Override
             public void chatCreated(final QBPrivateChat incomingPrivateChat, final boolean createdLocally) {
@@ -104,47 +93,30 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
     }
 
     /**
-     * Shows a waiting fragment to tell the user that the app is waiting for a connection from the
-     * driver device
-     */
-    private void showWaitingFragment() {
-        WaitingFragment fragment = WaitingFragment.newInstance("Waiting for connection...");
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.fragment_container, fragment)
-                .commit();
-    }
-
-    /**
-     * Show a waiting fragment to tell the user that the app is scanning for the robot over bluetooth
-     */
-    private void showScanningFragment() {
-        WaitingFragment fragment = WaitingFragment.newInstance("Connecting to robot...");
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.fragment_container, fragment)
-                .commit();
-    }
-
-    private void showConnectedFragment() {
-        ConnectedFragment fragment = ConnectedFragment.newInstance();
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.fragment_container, fragment)
-                .commit();
-    }
-
-    /**
      * Sends a chat message
      */
-    private void sendChatMessage(String message) {
+    private void sendChatMessageToDriver(String message) {
         if (privateChat != null) {
             try {
                 privateChat.sendMessage(message);
             } catch (XMPPException | SmackException.NotConnectedException e) {
-
+                e.printStackTrace();
             }
         }
+    }
+
+    private void enableReceivingVideoCalls() {
+        QBVideoChatWebRTCSignalingManager signalingManager = QBChatService.getInstance()
+                .getVideoChatWebRTCSignalingManager();
+
+        signalingManager.addSignalingManagerListener(new QBVideoChatSignalingManagerListener() {
+            @Override
+            public void signalingCreated(QBSignaling qbSignaling, boolean createdLocally) {
+                if (!createdLocally) {
+                    QBRTCClient.getInstance(RobotActivity.this).addSignaling((QBWebRTCSignaling) qbSignaling);
+                }
+            }
+        });
     }
 
     /**
@@ -152,7 +124,7 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
      *
      * @param direction direction robot should move
      */
-    private void sendDirections(SteeringListener.Direction direction) {
+    private void sendDirectionsToRobot(SteeringListener.Direction direction) {
         //todo change to sending percent value -100 to 100
         if (connectedToRobot()) {
             int left = 0;
@@ -176,11 +148,35 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
                     break;
             }
             //todo refactor start and end characters into usb message class
-            String bluetoothCommand = "(" + left + "," + right +")";
+            String bluetoothCommand = "(" + left + "," + right + ")";
             usbScanner.write("(R" + right + ")(L" + left + ")");
         } else {
             Log.d(TAG, "Can't send command, not connected to robot");
         }
+    }
+
+    private void showWaitingFragment() {
+        WaitingFragment fragment = WaitingFragment.newInstance("Waiting for connection...");
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .commit();
+    }
+
+    private void showScanningFragment() {
+        WaitingFragment fragment = WaitingFragment.newInstance("Connecting to robot...");
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .commit();
+    }
+
+    private void showConnectedFragment() {
+        ConnectedFragment fragment = ConnectedFragment.newInstance();
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .commit();
     }
 
     @Override
@@ -246,7 +242,7 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    sendDirections(SteeringListener.Direction.valueOf(chatMessage.getBody()));
+                    sendDirectionsToRobot(SteeringListener.Direction.valueOf(chatMessage.getBody()));
                 }
             });
         }
@@ -263,7 +259,7 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
 
     @Override
     public void onConnect() {
-        sendChatMessage("Connected to robot");
+        sendChatMessageToDriver("Connected to robot");
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -274,7 +270,7 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
 
     @Override
     public void onDisconnect() {
-        sendChatMessage("Disconnected from robot");
+        sendChatMessageToDriver("Disconnected from robot");
     }
 
     @Override
