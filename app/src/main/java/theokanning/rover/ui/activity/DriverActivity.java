@@ -138,12 +138,11 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
         List<Integer> ids = new ArrayList<>();
         ids.add(User.ROBOT.getId());
 
-        //Init session
         currentSession = QBRTCClient.getInstance(this).createNewSessionWithOpponents(ids,
                 QBRTCTypes.QBConferenceType.QB_CONFERENCE_TYPE_VIDEO);
 
 
-        Map<String, String> userInfo = new HashMap<>();
+        Map<String, String> userInfo = new HashMap<>(); //todo might be unnecessary
         userInfo.put("key", "robot");
 
         //Start call

@@ -152,7 +152,7 @@ public class UsbScanner {
                         Toast.makeText(context, "Permission granted", Toast.LENGTH_SHORT).show();
                         connectToDevice(device);
                     } else {
-                        Toast.makeText(context, "Permission revoked", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(context, "Permission denied", Toast.LENGTH_SHORT).show();
                     }
                 }
             }

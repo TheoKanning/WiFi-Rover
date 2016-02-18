@@ -36,22 +36,17 @@ public class ModeSelectionActivity extends BaseActivity implements ModeSelection
     @Override
     protected void onResume() {
         super.onResume();
-
         showModeSelection();
     }
 
-    /**
-     * Shows mode selection fragment without adding to back stack so that user can't return to WaitingFragment
-     */
+
     private void showModeSelection(){
         FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
         ft.replace(R.id.fragment_container, new ModeSelectionFragment());
         ft.commit();
     }
 
-    /**
-     * Shows a waiting screen when logging in
-     */
+
     private void showLoggingIn(){
         WaitingFragment fragment = WaitingFragment.newInstance("Logging in to chat service...");
         setFragment(fragment, true);
@@ -79,17 +74,10 @@ public class ModeSelectionActivity extends BaseActivity implements ModeSelection
                 if (!QBChatService.isInitialized()) {
                     QBChatService.init(ModeSelectionActivity.this);
                 }
+
                 QBChatService chatService = QBChatService.getInstance();
 
-                if (chatService.isLoggedIn()) {
-                    try {
-                        Log.d(TAG, "Logging out");
-                        chatService.logout();
-                    } catch (SmackException.NotConnectedException e) {
-                        Log.d(TAG, "Failed to log out");
-                        return;
-                    }
-                }
+                logOutOfChatService(chatService);
 
                 chatService.login(qbUser, new QBEntityCallbackImpl<QBUser>() {
 
@@ -126,12 +114,22 @@ public class ModeSelectionActivity extends BaseActivity implements ModeSelection
 
             @Override
             public void onError(List<String> errors) {
-
                 showModeSelection();
-
                 Toast.makeText(ModeSelectionActivity.this, "Could not start " + user + " session", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void logOutOfChatService(QBChatService chatService) {
+        if (chatService.isLoggedIn()) {
+            try {
+                Log.d(TAG, "Logging out");
+                chatService.logout();
+            } catch (SmackException.NotConnectedException e) {
+                Log.d(TAG, "Failed to log out");
+                e.printStackTrace();
+            }
+        }
     }
 
     /**

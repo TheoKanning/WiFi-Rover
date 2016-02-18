@@ -1,6 +1,7 @@
 package theokanning.rover.ui.fragment;
 
 
+import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -44,6 +45,12 @@ public class ModeSelectionFragment extends BaseFragment {
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         ButterKnife.bind(this, view);
+
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
         initializeModeSelectionInterface();
     }
 
