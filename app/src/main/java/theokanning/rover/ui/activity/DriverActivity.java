@@ -27,7 +27,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.inject.Inject;
+
+import rx.Subscriber;
 import theokanning.rover.R;
+import theokanning.rover.RoverApplication;
+import theokanning.rover.chat.DriverChatClient;
 import theokanning.rover.ui.fragment.WaitingFragment;
 import theokanning.rover.ui.fragment.driver.ConnectFragment;
 import theokanning.rover.ui.fragment.driver.ControlFragment;
@@ -40,22 +45,51 @@ import theokanning.rover.user.User;
 public class DriverActivity extends BaseActivity implements QBRTCClientSessionCallbacks, SteeringListener {
     private static final String TAG = "DriverActivity";
 
+    @Inject
+    DriverChatClient driverChatClient;
+
     private QBRTCSession currentSession;
     private QBPrivateChat privateChat;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        ((RoverApplication) getApplication()).getComponent().inject(this);
         setContentView(R.layout.activity_driver);
 
-        initQbrtcClient();
-        showConnectFragment();
+        loginToChatService();
     }
 
     @Override
     protected void onStop() {
         super.onStop();
         QBRTCClient.getInstance(this).removeSessionsCallbacksListener(this);
+    }
+
+    private void loginToChatService(){
+        showLoggingInFragment();
+        driverChatClient.login().subscribe(new Subscriber<Boolean>() {
+            @Override
+            public void onCompleted() {
+
+            }
+
+            @Override
+            public void onError(Throwable e) {
+
+            }
+
+            @Override
+            public void onNext(Boolean success) {
+                if(success){
+                    initQbrtcClient();
+                    showConnectFragment();
+                } else {
+//                    Intent intent = new Intent(DriverActivity.this,)
+                }
+            }
+        });
+
     }
 
     private void initQbrtcClient() {
@@ -101,6 +135,16 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
         } catch (SmackException.NotConnectedException e) {
 
         }
+    }
+    /**
+     * Shows waiting screen when logging in to chat service
+     */
+    private void showLoggingInFragment() {
+        WaitingFragment fragment = WaitingFragment.newInstance( "Logging in to chat service...");
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .commit();
     }
 
     /**

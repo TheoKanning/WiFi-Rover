@@ -21,7 +21,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 @RunWith(AndroidJUnit4.class)
-public class QuickbloxDriverChatClientTest {
+public class QuickBloxDriverChatClientTest {
 
     @Inject
     DriverChatClient driverChatClient;

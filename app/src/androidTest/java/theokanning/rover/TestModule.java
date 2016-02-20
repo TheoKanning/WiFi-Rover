@@ -7,7 +7,7 @@ import javax.inject.Singleton;
 import dagger.Module;
 import dagger.Provides;
 import theokanning.rover.chat.DriverChatClient;
-import theokanning.rover.chat.quickblox.QuickbloxDriverChatClient;
+import theokanning.rover.chat.quickblox.QuickBloxDriverChatClient;
 
 /**
  * Module for injecting mock objects
@@ -26,6 +26,6 @@ public class TestModule {
     @Singleton
     @Provides
     DriverChatClient provideDriverChatClient(){
-        return new QuickbloxDriverChatClient(context); //todo replace with mock
+        return new QuickBloxDriverChatClient(context); //todo replace with mock
     }
 }

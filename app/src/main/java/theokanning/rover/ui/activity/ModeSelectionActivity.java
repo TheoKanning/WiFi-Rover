@@ -7,8 +7,6 @@ import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.quickblox.auth.QBAuth;
-import com.quickblox.auth.model.QBSession;
 import com.quickblox.chat.QBChatService;
 import com.quickblox.core.QBEntityCallbackImpl;
 import com.quickblox.users.QBUsers;
@@ -45,16 +43,13 @@ public class ModeSelectionActivity extends BaseActivity implements ModeSelection
     protected void onResume() {
         super.onResume();
         showModeSelection();
-
     }
-
 
     private void showModeSelection() {
         FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
         ft.replace(R.id.fragment_container, new ModeSelectionFragment());
         ft.commit();
     }
-
 
     private void showLoggingIn() {
         WaitingFragment fragment = WaitingFragment.newInstance("Logging in to chat service...");
@@ -70,63 +65,19 @@ public class ModeSelectionActivity extends BaseActivity implements ModeSelection
      */
     @Override
     public void logInAndStartActivity(final User user) {
-        final QBUser qbUser = user.getQbUser();
+        Intent intent;
 
-        showLoggingIn();
+        switch (user) {
+            case DRIVER:
+                intent = new Intent(this, DriverActivity.class);
+                break;
+            case ROBOT:
+            default:
+                intent = new Intent(this, RobotActivity.class);
+                break;
+        }
 
-        //todo rearrange nested listeners
-        QBAuth.createSession(qbUser, new QBEntityCallbackImpl<QBSession>() {
-            @Override
-            public void onSuccess(QBSession result, Bundle params) {
-                Log.d(TAG, user + " session created successfully");
-
-                if (!QBChatService.isInitialized()) {
-                    QBChatService.init(ModeSelectionActivity.this);
-                }
-
-                QBChatService chatService = QBChatService.getInstance();
-
-                logOutOfChatService(chatService);
-
-                chatService.login(qbUser, new QBEntityCallbackImpl<QBUser>() {
-
-                    @Override
-                    public void onSuccess() {
-                        Log.d(TAG, user + " successfully logged in to chat, starting " + user + " activity");
-
-                        Intent intent;
-                        switch (user) {
-                            case DRIVER:
-                                intent = new Intent(ModeSelectionActivity.this, DriverActivity.class);
-                                break;
-                            case ROBOT:
-                            default:
-                                intent = new Intent(ModeSelectionActivity.this, RobotActivity.class);
-                                break;
-                        }
-
-                        startActivity(intent);
-                    }
-
-                    @Override
-                    public void onError(List errors) {
-
-                        showModeSelection();
-
-                        Toast.makeText(ModeSelectionActivity.this, "Error when logging in " + user, Toast.LENGTH_SHORT).show();
-                        for (Object error : errors) {
-                            Log.d(TAG, error.toString());
-                        }
-                    }
-                });
-            }
-
-            @Override
-            public void onError(List<String> errors) {
-                showModeSelection();
-                Toast.makeText(ModeSelectionActivity.this, "Could not start " + user + " session", Toast.LENGTH_SHORT).show();
-            }
-        });
+        startActivity(intent);
     }
 
     private void logOutOfChatService(QBChatService chatService) {

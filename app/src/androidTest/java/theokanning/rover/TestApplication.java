@@ -1,5 +1,6 @@
 package theokanning.rover;
 
+import theokanning.rover.dagger.ChatModule;
 import theokanning.rover.dagger.UsbModule;
 
 /**
@@ -15,7 +16,7 @@ public class TestApplication extends RoverApplication {
     public void onCreate() {
         super.onCreate();
         testComponent = DaggerTestComponent.builder()
-                .testModule(new TestModule(this))
+                .chatModule(new ChatModule(this))
                 .usbModule(new UsbModule(this))
                 .build();
     }

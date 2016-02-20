@@ -27,8 +27,10 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
+import rx.Subscriber;
 import theokanning.rover.R;
 import theokanning.rover.RoverApplication;
+import theokanning.rover.chat.RobotChatClient;
 import theokanning.rover.ui.fragment.WaitingFragment;
 import theokanning.rover.ui.fragment.robot.ConnectedFragment;
 import theokanning.rover.usb.UsbScanner;
@@ -44,6 +46,9 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
     @Inject
     UsbScanner usbScanner;
 
+    @Inject
+    RobotChatClient robotChatClient;
+
     private QBPrivateChat privateChat;
     private QBRTCSession currentSession;
 
@@ -57,10 +62,7 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
     @Override
     protected void onStart() {
         super.onStart();
-        initVideoChatClient();
-        initPrivateChatClient();
-        usbScanner.registerListener(this);
-        showWaitingFragment();
+        loginToChatService();
     }
 
     @Override
@@ -69,6 +71,33 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
         usbScanner.close();
         usbScanner.unregisterListener();
         QBRTCClient.getInstance(this).removeSessionsCallbacksListener(this);
+    }
+
+    private void loginToChatService(){
+        showLoggingInFragment();
+        robotChatClient.login().subscribe(new Subscriber<Boolean>() {
+            @Override
+            public void onCompleted() {
+
+            }
+
+            @Override
+            public void onError(Throwable e) {
+
+            }
+
+            @Override
+            public void onNext(Boolean success) {
+                if (success) {
+                    initVideoChatClient();
+                    initPrivateChatClient();
+                    usbScanner.registerListener(RobotActivity.this);
+                    showWaitingFragment();
+                } else {
+//                    Intent intent = new Intent(DriverActivity.this,)
+                }
+            }
+        });
     }
 
     private void initVideoChatClient() {
@@ -153,6 +182,17 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
         } else {
             Log.d(TAG, "Can't send command, not connected to robot");
         }
+    }
+
+    /**
+     * Shows waiting screen when logging in to chat service
+     */
+    private void showLoggingInFragment() {
+        WaitingFragment fragment = WaitingFragment.newInstance( "Logging in to chat service...");
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .commit();
     }
 
     private void showWaitingFragment() {
