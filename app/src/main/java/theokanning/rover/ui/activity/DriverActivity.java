@@ -5,15 +5,8 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.quickblox.videochat.webrtc.QBRTCClient;
 import com.quickblox.videochat.webrtc.QBRTCSession;
-import com.quickblox.videochat.webrtc.QBRTCTypes;
 import com.quickblox.videochat.webrtc.callbacks.QBRTCClientVideoTracksCallbacks;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import javax.inject.Inject;
 
@@ -24,7 +17,6 @@ import theokanning.rover.chat.client.DriverChatClient;
 import theokanning.rover.ui.fragment.WaitingFragment;
 import theokanning.rover.ui.fragment.driver.ConnectFragment;
 import theokanning.rover.ui.fragment.driver.ControlFragment;
-import theokanning.rover.user.User;
 
 /**
  * Activity where user controls remote device and watches video stream. Starts by showing
@@ -105,20 +97,7 @@ public class DriverActivity extends BaseActivity implements SteeringListener, Dr
      */
     public void connect() {
         showWaitingFragment();
-
-        List<Integer> ids = new ArrayList<>();
-        ids.add(User.ROBOT.getId());
-
-        currentSession = QBRTCClient.getInstance(this).createNewSessionWithOpponents(ids,
-                QBRTCTypes.QBConferenceType.QB_CONFERENCE_TYPE_VIDEO);
-
-
-        Map<String, String> userInfo = new HashMap<>(); //todo might be unnecessary
-        userInfo.put("key", "robot");
-
-        //Start call
-        Log.d(TAG, "Starting call");
-        currentSession.startCall(currentSession.getUserInfo());
+        driverChatClient.startCall();
     }
 
     public void addVideoTrackCallbacksListener(QBRTCClientVideoTracksCallbacks videoTracksCallbacks) {
@@ -149,10 +128,7 @@ public class DriverActivity extends BaseActivity implements SteeringListener, Dr
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-
-        if (currentSession != null) {
-            currentSession.hangUp(null);
-        }
+        driverChatClient.endCall();
     }
 
     @Override

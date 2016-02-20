@@ -10,4 +10,7 @@ import theokanning.rover.chat.callback.ChatCallbackListener;
 public interface ChatClient {
     void registerChatCallbackListener(ChatCallbackListener listener);
     void unregisterChatCallbackListener();
+
+    void endCall();
+    //void changeAudioSettings(); //todo create object for parameters
 }

@@ -15,11 +15,14 @@ import com.quickblox.chat.model.QBChatMessage;
 import com.quickblox.videochat.webrtc.QBRTCClient;
 import com.quickblox.videochat.webrtc.QBRTCConfig;
 import com.quickblox.videochat.webrtc.QBRTCSession;
+import com.quickblox.videochat.webrtc.QBRTCTypes;
 import com.quickblox.videochat.webrtc.callbacks.QBRTCClientSessionCallbacks;
 
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import rx.Observable;
@@ -43,11 +46,11 @@ public class QuickBloxChatClient implements RobotChatClient, DriverChatClient {
     private Context context;
 
     private QBPrivateChat privateChat;
+    private QBRTCSession currentSession;
 
     private ChatCallbackListener chatCallbackListener;
     private RobotChatCallbackListener robotChatCallbackListener;
     private DriverChatCallbackListener driverChatCallbackListener;
-
 
     @Override
     public void registerChatCallbackListener(ChatCallbackListener chatCallbackListener) {
@@ -57,6 +60,13 @@ public class QuickBloxChatClient implements RobotChatClient, DriverChatClient {
     @Override
     public void unregisterChatCallbackListener() {
         chatCallbackListener = null;
+    }
+
+    @Override
+    public void endCall() {
+        if (currentSession != null) {
+            currentSession.hangUp(null);
+        }
     }
 
     private Observable<Boolean> loginAsUser(final User user, final Context context) {
@@ -124,6 +134,18 @@ public class QuickBloxChatClient implements RobotChatClient, DriverChatClient {
         this.context = context;
         User user = User.DRIVER;
         return loginAsUser(user, context);
+    }
+
+    @Override
+    public void startCall() {
+        List<Integer> ids = new ArrayList<>();
+        ids.add(User.ROBOT.getId());
+
+        currentSession = QBRTCClient.getInstance(context).createNewSessionWithOpponents(ids,
+                        QBRTCTypes.QBConferenceType.QB_CONFERENCE_TYPE_VIDEO);
+
+        Log.d(TAG, "Starting call");
+        currentSession.startCall(currentSession.getUserInfo());
     }
 
     @Override
