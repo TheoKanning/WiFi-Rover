@@ -15,4 +15,8 @@ public interface DriverChatClient extends ChatClient {
     //void startCall();
     void registerDriverChatCallbackListener(DriverChatCallbackListener listener);
     void unregisterDriverChatCallbackListener();
+
+    //void endCall();
+    //void changeAudioSettings(); //todo create object for parameters
+    void sendMessageToRobot(String message);
 }

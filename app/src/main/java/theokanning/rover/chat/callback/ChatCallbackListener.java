@@ -9,5 +9,5 @@ import theokanning.rover.chat.client.RobotChatClient;
  */
 public interface ChatCallbackListener {
     void onSessionEnded();
-//    void onChatMessageReceived(String message);
+    void onChatMessageReceived(String message);
 }

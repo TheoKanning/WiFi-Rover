@@ -5,18 +5,11 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.quickblox.chat.QBChatService;
 import com.quickblox.chat.QBPrivateChat;
-import com.quickblox.chat.exception.QBChatException;
-import com.quickblox.chat.listeners.QBMessageListener;
-import com.quickblox.chat.model.QBChatMessage;
 import com.quickblox.videochat.webrtc.QBRTCClient;
 import com.quickblox.videochat.webrtc.QBRTCSession;
 import com.quickblox.videochat.webrtc.QBRTCTypes;
 import com.quickblox.videochat.webrtc.callbacks.QBRTCClientVideoTracksCallbacks;
-
-import org.jivesoftware.smack.SmackException;
-import org.jivesoftware.smack.XMPPException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -91,35 +84,10 @@ public class DriverActivity extends BaseActivity implements SteeringListener, Dr
         });
     }
 
-
-    /**
-     * Gets the chat session and sends a text message
-     *
-     * @param message string to send over chat client
-     */
     private void sendChatMessage(String message) {
-        if (privateChat == null) {
-            //todo this should be in its own method
-            Integer opponentId = User.ROBOT.getId();
-            privateChat = QBChatService.getInstance()
-                    .getPrivateChatManager()
-                    .createChat(opponentId, privateChatMessageListener);
-        }
-
-        try {
-            //todo wrap in method
-            QBChatMessage chatMessage = new QBChatMessage();
-            chatMessage.setBody(message);
-            privateChat.sendMessage(chatMessage);
-        } catch (XMPPException e) {
-
-        } catch (SmackException.NotConnectedException e) {
-
-        }
+        driverChatClient.sendMessageToRobot(message);
     }
-    /**
-     * Shows waiting screen when logging in to chat service
-     */
+
     private void showLoggingInFragment() {
         WaitingFragment fragment = WaitingFragment.newInstance( "Logging in to chat service...");
         getSupportFragmentManager()
@@ -128,16 +96,10 @@ public class DriverActivity extends BaseActivity implements SteeringListener, Dr
                 .commit();
     }
 
-    /**
-     * Shows connect fragment that gives user option to initiate call
-     */
     private void showConnectFragment() {
         setFragment(new ConnectFragment(), true);
     }
 
-    /**
-     * Shows waiting screen when starting call
-     */
     private void showWaitingFragment() {
         WaitingFragment fragment = WaitingFragment.newInstance( "Attempting to connect to robot...");
         getSupportFragmentManager()
@@ -200,18 +162,6 @@ public class DriverActivity extends BaseActivity implements SteeringListener, Dr
         }
     }
 
-    QBMessageListener<QBPrivateChat> privateChatMessageListener = new QBMessageListener<QBPrivateChat>() {
-        @Override
-        public void processMessage(QBPrivateChat privateChat, final QBChatMessage chatMessage) {
-            Toast.makeText(DriverActivity.this, chatMessage.getBody(), Toast.LENGTH_SHORT).show();
-        }
-
-        @Override
-        public void processError(QBPrivateChat privateChat, QBChatException error, QBChatMessage originMessage) {
-            Log.e(TAG, error.getMessage());
-        }
-    };
-
     @Override
     public void onBackPressed() {
         super.onBackPressed();
@@ -242,5 +192,10 @@ public class DriverActivity extends BaseActivity implements SteeringListener, Dr
     @Override
     public void onSessionEnded() {
         showConnectFragment();
+    }
+
+    @Override
+    public void onChatMessageReceived(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 }

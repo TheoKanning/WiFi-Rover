@@ -1,16 +1,24 @@
 package theokanning.rover.chat.quickblox;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.quickblox.chat.QBChatService;
+import com.quickblox.chat.QBPrivateChat;
 import com.quickblox.chat.QBSignaling;
 import com.quickblox.chat.QBVideoChatWebRTCSignalingManager;
 import com.quickblox.chat.QBWebRTCSignaling;
+import com.quickblox.chat.exception.QBChatException;
+import com.quickblox.chat.listeners.QBMessageListener;
 import com.quickblox.chat.listeners.QBVideoChatSignalingManagerListener;
+import com.quickblox.chat.model.QBChatMessage;
 import com.quickblox.videochat.webrtc.QBRTCClient;
 import com.quickblox.videochat.webrtc.QBRTCConfig;
 import com.quickblox.videochat.webrtc.QBRTCSession;
 import com.quickblox.videochat.webrtc.callbacks.QBRTCClientSessionCallbacks;
+
+import org.jivesoftware.smack.SmackException;
+import org.jivesoftware.smack.XMPPException;
 
 import java.util.Map;
 
@@ -30,16 +38,16 @@ import theokanning.rover.user.User;
  */
 public class QuickBloxChatClient implements RobotChatClient, DriverChatClient{
 
+    private static final String TAG = "QuickBloxChatClient";
+
     private Context context;
+
+    private QBPrivateChat privateChat;
 
     private ChatCallbackListener chatCallbackListener;
     private RobotChatCallbackListener robotChatCallbackListener;
     private DriverChatCallbackListener driverChatCallbackListener;
 
-    @Override
-    public void sendChatMessage(String message) {
-
-    }
 
     @Override
     public void registerChatCallbackListener(ChatCallbackListener chatCallbackListener) {
@@ -103,6 +111,11 @@ public class QuickBloxChatClient implements RobotChatClient, DriverChatClient{
     }
 
     @Override
+    public void sendMessageToDriver(String message) {
+
+    }
+
+    @Override
     public Observable<Boolean> loginAsDriver(Context context) {
         this.context = context;
         User user = User.DRIVER;
@@ -117,6 +130,28 @@ public class QuickBloxChatClient implements RobotChatClient, DriverChatClient{
     @Override
     public void unregisterDriverChatCallbackListener() {
         this.driverChatCallbackListener = null;
+    }
+
+    @Override
+    public void sendMessageToRobot(String message) {
+        if (privateChat == null) {
+            //todo this should be in its own method
+            Integer opponentId = User.ROBOT.getId();
+            privateChat = QBChatService.getInstance()
+                    .getPrivateChatManager()
+                    .createChat(opponentId, privateChatMessageListener);
+        }
+
+        try {
+            //todo wrap in method
+            QBChatMessage chatMessage = new QBChatMessage();
+            chatMessage.setBody(message);
+            privateChat.sendMessage(chatMessage);
+        } catch (XMPPException e) {
+
+        } catch (SmackException.NotConnectedException e) {
+
+        }
     }
 
     QBRTCClientSessionCallbacks sessionCallbacks = new QBRTCClientSessionCallbacks() {
@@ -158,6 +193,18 @@ public class QuickBloxChatClient implements RobotChatClient, DriverChatClient{
         @Override
         public void onSessionStartClose(QBRTCSession qbrtcSession) {
 
+        }
+    };
+
+    QBMessageListener<QBPrivateChat> privateChatMessageListener = new QBMessageListener<QBPrivateChat>() {
+        @Override
+        public void processMessage(QBPrivateChat privateChat, final QBChatMessage chatMessage) {
+            chatCallbackListener.onChatMessageReceived(chatMessage.getBody());
+        }
+
+        @Override
+        public void processError(QBPrivateChat privateChat, QBChatException error, QBChatMessage originMessage) {
+            Log.e(TAG, error.getMessage());
         }
     };
 

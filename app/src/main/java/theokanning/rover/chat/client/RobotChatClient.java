@@ -14,4 +14,8 @@ public interface RobotChatClient extends ChatClient {
     Observable<Boolean> loginAsRobot(Context context);
     void registerRobotChatCallbackListener(RobotChatCallbackListener listener);
     void unregisterRobotChatCallbackListener();
+
+    //void endCall();
+    //void changeAudioSettings(); //todo create object for parameters
+    void sendMessageToDriver(String message);
 }
