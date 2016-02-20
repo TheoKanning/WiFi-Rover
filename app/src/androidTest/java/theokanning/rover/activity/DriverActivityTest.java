@@ -49,7 +49,7 @@ public class DriverActivityTest {
 
     @Test
     public void loginFailure(){
-        Mockito.when(mockDriverChatClient.login(context)).thenReturn(Observable.just(false));
+        Mockito.when(mockDriverChatClient.loginAsDriver(context)).thenReturn(Observable.just(false));
 
         Instrumentation.ActivityMonitor monitor = InstrumentationRegistry.getInstrumentation()
                 .addMonitor(ModeSelectionActivity.class.getName(), null, true);

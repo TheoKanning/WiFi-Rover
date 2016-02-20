@@ -7,7 +7,7 @@ import theokanning.rover.chat.client.RobotChatClient;
  *
  * @author Theo Kanning
  */
-public interface ChatCallbacks {
-//    void onSessionEnded();
+public interface ChatCallbackListener {
+    void onSessionEnded();
 //    void onChatMessageReceived(String message);
 }

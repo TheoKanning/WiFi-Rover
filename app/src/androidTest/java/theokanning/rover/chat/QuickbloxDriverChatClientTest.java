@@ -41,7 +41,7 @@ public class QuickBloxDriverChatClientTest {
 
     @Test
     public void testLogin() {
-        final Observable<Boolean> observable = driverChatClient.login(context);
+        final Observable<Boolean> observable = driverChatClient.loginAsDriver(context);
         TestSubscriber<Boolean> subscriber = new TestSubscriber<>();
         observable.subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())

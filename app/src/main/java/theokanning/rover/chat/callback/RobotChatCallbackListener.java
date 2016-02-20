@@ -5,6 +5,6 @@ import theokanning.rover.chat.client.RobotChatClient;
  *
  * @author Theo Kanning
  */
-public interface RobotChatCallbacks {
+public interface RobotChatCallbackListener extends ChatCallbackListener{
     void onCallReceived(); //todo create answerable class?
 }

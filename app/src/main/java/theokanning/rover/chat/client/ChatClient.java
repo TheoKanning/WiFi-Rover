@@ -1,8 +1,6 @@
 package theokanning.rover.chat.client;
 
-import android.content.Context;
-
-import rx.Observable;
+import theokanning.rover.chat.callback.ChatCallbackListener;
 
 /**
  * All chat methods used by both Driver and Robot
@@ -10,9 +8,9 @@ import rx.Observable;
  * @author Theo Kanning
  */
 public interface ChatClient {
-    Observable<Boolean> login(Context context);
     //void endCall();
     //void changeAudioSettings(); //todo create object for parameters
-    //void sendChatMessage(String message);
-    //void registerChatCallbacks(); //todo take chat callbacks object
+    void sendChatMessage(String message);
+    void registerChatCallbackListener(ChatCallbackListener listener);
+    void unregisterChatCallbackListener();
 }

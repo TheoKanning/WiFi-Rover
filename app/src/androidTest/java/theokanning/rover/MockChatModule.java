@@ -10,8 +10,7 @@ import dagger.Module;
 import dagger.Provides;
 import theokanning.rover.chat.client.DriverChatClient;
 import theokanning.rover.chat.client.RobotChatClient;
-import theokanning.rover.chat.quickblox.QuickBloxDriverChatClient;
-import theokanning.rover.chat.quickblox.QuickBloxRobotChatClient;
+import theokanning.rover.chat.quickblox.QuickBloxChatClient;
 
 /**
  * Module for injecting mock objects into tests
@@ -36,7 +35,7 @@ public class MockChatModule {
         if (mockMode) {
             return Mockito.mock(DriverChatClient.class);
         } else {
-            return new QuickBloxDriverChatClient();
+            return new QuickBloxChatClient();
         }
     }
 
@@ -46,7 +45,7 @@ public class MockChatModule {
         if (mockMode) {
             return Mockito.mock(RobotChatClient.class);
         } else {
-            return new QuickBloxRobotChatClient();
+            return new QuickBloxChatClient();
         }
     }
 }

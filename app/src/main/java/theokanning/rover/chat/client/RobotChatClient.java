@@ -1,6 +1,9 @@
 package theokanning.rover.chat.client;
 
-import theokanning.rover.chat.client.ChatClient;
+import android.content.Context;
+
+import rx.Observable;
+import theokanning.rover.chat.callback.RobotChatCallbackListener;
 
 /**
  * All common chat methods plus those used by the robot
@@ -8,5 +11,7 @@ import theokanning.rover.chat.client.ChatClient;
  * @author Theo Kanning
  */
 public interface RobotChatClient extends ChatClient {
-    //void registerRobotCallback(); //todo add callback class
+    Observable<Boolean> loginAsRobot(Context context);
+    void registerRobotChatCallbackListener(RobotChatCallbackListener listener);
+    void unregisterRobotChatCallbackListener();
 }

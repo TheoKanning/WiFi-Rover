@@ -11,10 +11,8 @@ import com.quickblox.chat.exception.QBChatException;
 import com.quickblox.chat.listeners.QBMessageListener;
 import com.quickblox.chat.model.QBChatMessage;
 import com.quickblox.videochat.webrtc.QBRTCClient;
-import com.quickblox.videochat.webrtc.QBRTCConfig;
 import com.quickblox.videochat.webrtc.QBRTCSession;
 import com.quickblox.videochat.webrtc.QBRTCTypes;
-import com.quickblox.videochat.webrtc.callbacks.QBRTCClientSessionCallbacks;
 import com.quickblox.videochat.webrtc.callbacks.QBRTCClientVideoTracksCallbacks;
 
 import org.jivesoftware.smack.SmackException;
@@ -30,6 +28,7 @@ import javax.inject.Inject;
 import rx.Subscriber;
 import theokanning.rover.R;
 import theokanning.rover.RoverApplication;
+import theokanning.rover.chat.callback.DriverChatCallbackListener;
 import theokanning.rover.chat.client.DriverChatClient;
 import theokanning.rover.ui.fragment.WaitingFragment;
 import theokanning.rover.ui.fragment.driver.ConnectFragment;
@@ -40,7 +39,7 @@ import theokanning.rover.user.User;
  * Activity where user controls remote device and watches video stream. Starts by showing
  * instructions to connect to remote device, then connects and shows video stream.
  */
-public class DriverActivity extends BaseActivity implements QBRTCClientSessionCallbacks, SteeringListener {
+public class DriverActivity extends BaseActivity implements SteeringListener, DriverChatCallbackListener {
     private static final String TAG = "DriverActivity";
 
     @Inject
@@ -54,19 +53,21 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
         super.onCreate(savedInstanceState);
         ((RoverApplication) getApplication()).getComponent().inject(this);
         setContentView(R.layout.activity_driver);
-
+        driverChatClient.registerChatCallbackListener(this);
+        driverChatClient.registerDriverChatCallbackListener(this);
         loginToChatService();
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        QBRTCClient.getInstance(this).removeSessionsCallbacksListener(this);
+        driverChatClient.unregisterDriverChatCallbackListener();
+        driverChatClient.unregisterChatCallbackListener();
     }
 
     private void loginToChatService(){
         showLoggingInFragment();
-        driverChatClient.login(this).subscribe(new Subscriber<Boolean>() {
+        driverChatClient.loginAsDriver(this).subscribe(new Subscriber<Boolean>() {
             @Override
             public void onCompleted() {
 
@@ -80,7 +81,6 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
             @Override
             public void onNext(Boolean success) {
                 if(success){
-                    initVideoChatClient();
                     showConnectFragment();
                 } else {
                     Intent intent = new Intent(DriverActivity.this, ModeSelectionActivity.class);
@@ -91,10 +91,6 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
         });
     }
 
-    private void initVideoChatClient() {
-        QBRTCConfig.setAnswerTimeInterval(10); //Wait for 10 seconds before giving up call
-        QBRTCClient.getInstance(this).addSessionCallbacksListener(this);
-    }
 
     /**
      * Gets the chat session and sends a text message
@@ -204,55 +200,6 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
         }
     }
 
-    @Override
-    public void onReceiveNewSession(QBRTCSession qbrtcSession) {
-        //Should not happen
-    }
-
-    @Override
-    public void onUserNotAnswer(QBRTCSession qbrtcSession, Integer integer) {
-        Toast.makeText(this, "Robot did not answer", Toast.LENGTH_SHORT).show();
-        showConnectFragment();
-    }
-
-    @Override
-    public void onCallRejectByUser(QBRTCSession qbrtcSession, Integer integer, Map<String, String> map) {
-        Log.e(TAG, "Call rejected, should not happen");
-    }
-
-    @Override
-    public void onCallAcceptByUser(QBRTCSession qbrtcSession, Integer integer, Map<String, String> map) {
-        if (qbrtcSession != currentSession) {
-            Log.e(TAG, "Call accepted for incorrect session");
-            return;
-        }
-        Toast.makeText(this, "Starting video chat", Toast.LENGTH_SHORT).show();
-        Log.d(TAG, "Connected successfully");
-        showControlFragment();
-    }
-
-    @Override
-    public void onReceiveHangUpFromUser(QBRTCSession qbrtcSession, Integer integer) {
-        currentSession = null;
-        showConnectFragment();
-    }
-
-    @Override
-    public void onUserNoActions(QBRTCSession qbrtcSession, Integer integer) {
-
-    }
-
-    @Override
-    public void onSessionClosed(QBRTCSession qbrtcSession) {
-        Log.e(TAG, "Session closed");
-        showConnectFragment();
-    }
-
-    @Override
-    public void onSessionStartClose(QBRTCSession qbrtcSession) {
-
-    }
-
     QBMessageListener<QBPrivateChat> privateChatMessageListener = new QBMessageListener<QBPrivateChat>() {
         @Override
         public void processMessage(QBPrivateChat privateChat, final QBChatMessage chatMessage) {
@@ -277,5 +224,23 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
     @Override
     public void sendCommand(Direction direction) {
         sendChatMessage(direction.toString());
+    }
+
+    @Override
+    public void onCallAnswered() {
+        Toast.makeText(this, "Starting video chat", Toast.LENGTH_SHORT).show();
+        Log.d(TAG, "Connected successfully");
+        showControlFragment();
+    }
+
+    @Override
+    public void onCallNotAnswered() {
+        Toast.makeText(this, "Robot did not answer", Toast.LENGTH_SHORT).show();
+        showConnectFragment();
+    }
+
+    @Override
+    public void onSessionEnded() {
+        showConnectFragment();
     }
 }

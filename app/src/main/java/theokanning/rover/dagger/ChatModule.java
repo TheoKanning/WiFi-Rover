@@ -8,8 +8,7 @@ import dagger.Module;
 import dagger.Provides;
 import theokanning.rover.chat.client.DriverChatClient;
 import theokanning.rover.chat.client.RobotChatClient;
-import theokanning.rover.chat.quickblox.QuickBloxDriverChatClient;
-import theokanning.rover.chat.quickblox.QuickBloxRobotChatClient;
+import theokanning.rover.chat.quickblox.QuickBloxChatClient;
 
 @Module
 public class ChatModule {
@@ -23,12 +22,12 @@ public class ChatModule {
     @Singleton
     @Provides
     DriverChatClient provideDriverChatClient(){
-        return new QuickBloxDriverChatClient();
+        return new QuickBloxChatClient();
     }
 
     @Singleton
     @Provides
     RobotChatClient provideRobotChatClient(){
-        return new QuickBloxRobotChatClient();
+        return new QuickBloxChatClient();
     }
 }

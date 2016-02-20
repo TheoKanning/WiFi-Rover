@@ -71,7 +71,7 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
 
     private void loginToChatService(){
         showLoggingInFragment();
-        robotChatClient.login(this).subscribe(new Subscriber<Boolean>() {
+        robotChatClient.loginAsRobot(this).subscribe(new Subscriber<Boolean>() {
             @Override
             public void onCompleted() {
 

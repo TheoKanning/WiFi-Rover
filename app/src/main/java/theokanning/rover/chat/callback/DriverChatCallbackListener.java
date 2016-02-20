@@ -6,7 +6,7 @@ import theokanning.rover.chat.client.DriverChatClient;
  *
  * @author Theo Kanning
  */
-public interface DriverChatCallbacks {
+public interface DriverChatCallbackListener extends ChatCallbackListener{
     void onCallAnswered(); //todo create answerable class?
     void onCallNotAnswered();
 }
