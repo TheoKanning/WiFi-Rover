@@ -5,13 +5,12 @@ import android.util.Log;
 
 import com.quickblox.chat.QBChatService;
 import com.quickblox.chat.QBPrivateChat;
-import com.quickblox.chat.QBSignaling;
 import com.quickblox.chat.QBVideoChatWebRTCSignalingManager;
 import com.quickblox.chat.QBWebRTCSignaling;
 import com.quickblox.chat.exception.QBChatException;
 import com.quickblox.chat.listeners.QBMessageListener;
-import com.quickblox.chat.listeners.QBVideoChatSignalingManagerListener;
 import com.quickblox.chat.model.QBChatMessage;
+import com.quickblox.users.model.QBUser;
 import com.quickblox.videochat.webrtc.QBRTCClient;
 import com.quickblox.videochat.webrtc.QBRTCConfig;
 import com.quickblox.videochat.webrtc.QBRTCSession;
@@ -77,19 +76,6 @@ public abstract class QuickBloxChatClient implements RobotChatClient, DriverChat
         }
     }
 
-    private Observable<Boolean> loginAsUser(final User user, final Context context) {
-        Observable<Boolean> observable = Observable.create(new Observable.OnSubscribe<Boolean>() {
-            @Override
-            public void call(final Subscriber<? super Boolean> subscriber) {
-                QuickBloxLoginTask task = new QuickBloxLoginTask(user, context,
-                        new LoginTaskSubscriberAdapter(subscriber, QuickBloxChatClient.this));
-                task.execute();
-            }
-        });
-
-        return observable;
-    }
-
     public void initVideoChatClient() {
         QBRTCClient.getInstance(context).prepareToProcessCalls();
         QBRTCClient.getInstance(context).addSessionCallbacksListener(sessionCallbacks);
@@ -101,21 +87,27 @@ public abstract class QuickBloxChatClient implements RobotChatClient, DriverChat
         QBVideoChatWebRTCSignalingManager signalingManager = QBChatService.getInstance()
                 .getVideoChatWebRTCSignalingManager();
 
-        signalingManager.addSignalingManagerListener(new QBVideoChatSignalingManagerListener() {
-            @Override
-            public void signalingCreated(QBSignaling qbSignaling, boolean createdLocally) {
-                if (!createdLocally) {
-                    QBRTCClient.getInstance(context).addSignaling((QBWebRTCSignaling) qbSignaling);
-                }
+        signalingManager.addSignalingManagerListener((qbSignaling, createdLocally) -> {
+            if (!createdLocally) {
+                QBRTCClient.getInstance(context).addSignaling((QBWebRTCSignaling) qbSignaling);
             }
         });
     }
 
     @Override
-    public Observable<Boolean> loginAsRobot(Context context) {
+    public Observable<Boolean> login(final Context context) {
         this.context = context;
-        User user = User.ROBOT;
-        return loginAsUser(user, context);
+        final QBUser user = getUser();
+        Observable<Boolean> observable = Observable.create(new Observable.OnSubscribe<Boolean>() {
+            @Override
+            public void call(final Subscriber<? super Boolean> subscriber) {
+                QuickBloxLoginTask task = new QuickBloxLoginTask(user, context,
+                        new LoginTaskSubscriberAdapter(subscriber, QuickBloxChatClient.this));
+                task.execute();
+            }
+        });
+
+        return observable;
     }
 
     @Override
@@ -129,19 +121,11 @@ public abstract class QuickBloxChatClient implements RobotChatClient, DriverChat
     }
 
     @Override
-    public void sendMessageToDriver(String message) {
-        //todo consider making this abstract and forcing subclasses to implement getUserId/getOpponentId()?
+    public void sendMessage(String message) {
         if (privateChat == null) {
-            startPrivateChatWithDriver();
+            startPrivateChat();
         }
-        sendMessage(message);
-    }
-
-    @Override
-    public Observable<Boolean> loginAsDriver(Context context) {
-        this.context = context;
-        User user = User.DRIVER;
-        return loginAsUser(user, context);
+        trySendingMessage(message);
     }
 
     @Override
@@ -166,13 +150,6 @@ public abstract class QuickBloxChatClient implements RobotChatClient, DriverChat
         this.driverChatCallbackListener = null;
     }
 
-    @Override
-    public void sendMessageToRobot(String message) {
-        if (privateChat == null) {
-            startPrivateChatWithRobot();
-        }
-        sendMessage(message);
-    }
 
     @Override
     public void registerQbVideoCallbacksListener(QBRTCClientVideoTracksCallbacks callbacks) {
@@ -188,23 +165,14 @@ public abstract class QuickBloxChatClient implements RobotChatClient, DriverChat
         }
     }
 
-    private void startPrivateChatWithDriver() {
-        Integer opponentId = User.DRIVER.getId();
-        startPrivateChat(opponentId);
-    }
-
-    private void startPrivateChatWithRobot() {
-        Integer opponentId = User.ROBOT.getId();
-        startPrivateChat(opponentId);
-    }
-
-    private void startPrivateChat(Integer opponentId) {
+    private void startPrivateChat() {
+        Integer opponentId = getOpponent().getId();
         privateChat = QBChatService.getInstance()
                 .getPrivateChatManager()
                 .createChat(opponentId, privateChatMessageListener);
     }
 
-    private void sendMessage(String message) {
+    private void trySendingMessage(String message) {
         try {
             QBChatMessage chatMessage = new QBChatMessage();
             chatMessage.setBody(message);
@@ -213,8 +181,6 @@ public abstract class QuickBloxChatClient implements RobotChatClient, DriverChat
             //do nothing
         }
     }
-
-    protected abstract int getUserQuickbloxId();
 
     QBRTCClientSessionCallbacks sessionCallbacks = new QBRTCClientSessionCallbacks() {
         @Override
@@ -270,5 +236,7 @@ public abstract class QuickBloxChatClient implements RobotChatClient, DriverChat
         }
     };
 
+    protected abstract QBUser getUser();
 
+    protected abstract QBUser getOpponent();
 }

@@ -1,5 +1,6 @@
 package theokanning.rover.ui.activity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
@@ -23,7 +24,6 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
-import rx.Subscriber;
 import theokanning.rover.R;
 import theokanning.rover.RoverApplication;
 import theokanning.rover.chat.client.RobotChatClient;
@@ -69,29 +69,18 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
         QBRTCClient.getInstance(this).removeSessionsCallbacksListener(this);
     }
 
-    private void loginToChatService(){
+    private void loginToChatService() {
         showLoggingInFragment();
-        robotChatClient.loginAsRobot(this).subscribe(new Subscriber<Boolean>() {
-            @Override
-            public void onCompleted() {
-
-            }
-
-            @Override
-            public void onError(Throwable e) {
-
-            }
-
-            @Override
-            public void onNext(Boolean success) {
-                if (success) {
-                    initVideoChatClient();
-                    initPrivateChatClient();
-                    usbScanner.registerListener(RobotActivity.this);
-                    showWaitingFragment();
-                } else {
-//                    Intent intent = new Intent(ModeSelectionActivity.this,)
-                }
+        robotChatClient.login(this).subscribe((success) -> {
+            if (success) {
+                initVideoChatClient();
+                initPrivateChatClient();
+                usbScanner.registerListener(RobotActivity.this);
+                showWaitingFragment();
+            } else {
+                Intent intent = new Intent(RobotActivity.this, ModeSelectionActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
             }
         });
     }
@@ -167,7 +156,7 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
      * Shows waiting screen when logging in to chat service
      */
     private void showLoggingInFragment() {
-        WaitingFragment fragment = WaitingFragment.newInstance( "Logging in to chat service...");
+        WaitingFragment fragment = WaitingFragment.newInstance("Logging in to chat service...");
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.fragment_container, fragment)

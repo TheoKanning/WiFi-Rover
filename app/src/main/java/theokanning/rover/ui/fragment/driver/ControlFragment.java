@@ -25,7 +25,6 @@ import butterknife.OnTouch;
 import theokanning.rover.R;
 import theokanning.rover.RoverApplication;
 import theokanning.rover.chat.client.DriverChatClient;
-import theokanning.rover.ui.activity.SteeringListener;
 import theokanning.rover.ui.activity.SteeringListener.Direction;
 import theokanning.rover.ui.fragment.BaseFragment;
 
@@ -43,8 +42,6 @@ public class ControlFragment extends BaseFragment implements QBRTCClientVideoTra
     @Bind(R.id.audio_toggle)
     ToggleButton audioToggle;
 
-    private SteeringListener steeringListener;
-
     private Direction currentDirection;
 
     @Override
@@ -55,7 +52,6 @@ public class ControlFragment extends BaseFragment implements QBRTCClientVideoTra
         ButterKnife.bind(this, view);
 
         driverChatClient.registerQbVideoCallbacksListener(this);
-        steeringListener = (SteeringListener) getActivity(); //todo put in onattach or do directly
         return view;
     }
 
@@ -131,7 +127,7 @@ public class ControlFragment extends BaseFragment implements QBRTCClientVideoTra
      */
     private void sendDirection(Direction direction) {
         if (direction != null) {
-            steeringListener.sendCommand(direction);
+            driverChatClient.sendMessage(direction.toString());
         }
     }
 

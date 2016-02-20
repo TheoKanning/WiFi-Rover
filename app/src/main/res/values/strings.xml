@@ -15,7 +15,4 @@
     <string name="connect">Connect</string>
     <string name="connect_description">Make sure the robot phone is ready, then press connect.</string>
 
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
-
 </resources>

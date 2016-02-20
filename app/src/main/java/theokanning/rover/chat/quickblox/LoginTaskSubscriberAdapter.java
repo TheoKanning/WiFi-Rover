@@ -4,6 +4,9 @@ import rx.Subscriber;
 
 /**
  * Adapts {@link QuickBloxLoginTask.LoginTaskCallback} events to a subscriber
+ *
+ * todo is adapter the right word?
+ * @author Theo Kanning
  */
 public class LoginTaskSubscriberAdapter implements QuickBloxLoginTask.LoginTaskCallback {
     private final QuickBloxChatClient chatClient;

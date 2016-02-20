@@ -14,8 +14,6 @@ import org.jivesoftware.smack.XMPPException;
 
 import java.io.IOException;
 
-import theokanning.rover.user.User;
-
 /**
  * Background task for logging in to QuickBlox service
  *
@@ -37,9 +35,9 @@ public class QuickBloxLoginTask extends AsyncTask<Void, Void, Boolean> {
 
     private Context context;
 
-    private User user;
+    private QBUser user;
 
-    public QuickBloxLoginTask(User user, Context context, LoginTaskCallback callback) {
+    public QuickBloxLoginTask(QBUser user, Context context, LoginTaskCallback callback) {
         this.user = user;
         this.callback = callback;
         this.context = context;
@@ -48,10 +46,8 @@ public class QuickBloxLoginTask extends AsyncTask<Void, Void, Boolean> {
     @Override
     protected Boolean doInBackground(Void... params) {
 
-        final QBUser qbUser = user.getQbUser();
-
         try {
-            QBAuth.createSession(qbUser);
+            QBAuth.createSession(user);
         } catch (QBResponseException e) {
             e.printStackTrace();
             return false;
@@ -75,7 +71,7 @@ public class QuickBloxLoginTask extends AsyncTask<Void, Void, Boolean> {
         }
 
         try {
-            chatService.login(qbUser);
+            chatService.login(user);
         } catch (XMPPException | IOException | SmackException e) {
             e.printStackTrace();
             return false;

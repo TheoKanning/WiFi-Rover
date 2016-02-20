@@ -1,8 +1,5 @@
 package theokanning.rover.chat.client;
 
-import android.content.Context;
-
-import rx.Observable;
 import theokanning.rover.chat.callback.RobotChatCallbackListener;
 
 /**
@@ -11,11 +8,6 @@ import theokanning.rover.chat.callback.RobotChatCallbackListener;
  * @author Theo Kanning
  */
 public interface RobotChatClient extends ChatClient {
-    Observable<Boolean> loginAsRobot(Context context);
     void registerRobotChatCallbackListener(RobotChatCallbackListener listener);
     void unregisterRobotChatCallbackListener();
-
-    //void endCall();
-    //void changeAudioSettings(); //todo create object for parameters
-    void sendMessageToDriver(String message);
 }

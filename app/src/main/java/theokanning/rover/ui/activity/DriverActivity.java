@@ -5,8 +5,6 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.quickblox.videochat.webrtc.QBRTCSession;
-
 import javax.inject.Inject;
 
 import theokanning.rover.R;
@@ -21,13 +19,11 @@ import theokanning.rover.ui.fragment.driver.ControlFragment;
  * Activity where user controls remote device and watches video stream. Starts by showing
  * instructions to connect to remote device, then connects and shows video stream.
  */
-public class DriverActivity extends BaseActivity implements SteeringListener, DriverChatCallbackListener {
+public class DriverActivity extends BaseActivity implements DriverChatCallbackListener {
     private static final String TAG = "DriverActivity";
 
     @Inject
     DriverChatClient driverChatClient;
-
-    private QBRTCSession currentSession;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,7 +50,7 @@ public class DriverActivity extends BaseActivity implements SteeringListener, Dr
 
     private void loginToChatService() {
         showLoggingInFragment();
-        driverChatClient.loginAsDriver(this).subscribe((success) -> {
+        driverChatClient.login(this).subscribe((success) -> {
             if (success) {
                 showConnectFragment();
             } else {
@@ -66,7 +62,7 @@ public class DriverActivity extends BaseActivity implements SteeringListener, Dr
     }
 
     private void sendChatMessage(String message) {
-        driverChatClient.sendMessageToRobot(message);
+        driverChatClient.sendMessage(message);
     }
 
     private void showLoggingInFragment() {
@@ -103,11 +99,6 @@ public class DriverActivity extends BaseActivity implements SteeringListener, Dr
     public void connect() {
         showWaitingFragment();
         driverChatClient.startCall();
-    }
-
-    @Override
-    public void sendCommand(Direction direction) {
-        sendChatMessage(direction.toString());
     }
 
     @Override
