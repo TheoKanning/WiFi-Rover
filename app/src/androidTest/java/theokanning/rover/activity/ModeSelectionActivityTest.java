@@ -24,10 +24,8 @@ import static org.junit.Assert.assertEquals;
 public class ModeSelectionActivityTest {
 
     @Rule
-    public ActivityTestRule<ModeSelectionActivity> activityRule = new ActivityTestRule<>(
-            ModeSelectionActivity.class,
-            true,
-            true);
+    public ActivityTestRule<ModeSelectionActivity> activityRule =
+            new ActivityTestRule<>(ModeSelectionActivity.class, true, true);
 
     @Test
     public void testStartingActivities() {

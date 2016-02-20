@@ -1,5 +1,6 @@
 package theokanning.rover.ui.activity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
@@ -85,7 +86,9 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
                     initQbrtcClient();
                     showConnectFragment();
                 } else {
-//                    Intent intent = new Intent(DriverActivity.this,)
+                    Intent intent = new Intent(DriverActivity.this, ModeSelectionActivity.class);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
                 }
             }
         });

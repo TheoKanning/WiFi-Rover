@@ -30,7 +30,7 @@ public class QuickBloxDriverChatClientTest {
     public void setup() {
         Instrumentation instrumentation = InstrumentationRegistry.getInstrumentation();
         TestApplication app = (TestApplication) instrumentation.getTargetContext().getApplicationContext();
-        TestComponent component = app.getTestComponent();
+        TestComponent component = (TestComponent) app.getComponent();
         component.inject(this);
     }
 

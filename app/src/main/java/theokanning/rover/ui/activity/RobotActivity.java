@@ -94,7 +94,7 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
                     usbScanner.registerListener(RobotActivity.this);
                     showWaitingFragment();
                 } else {
-//                    Intent intent = new Intent(DriverActivity.this,)
+//                    Intent intent = new Intent(ModeSelectionActivity.this,)
                 }
             }
         });
