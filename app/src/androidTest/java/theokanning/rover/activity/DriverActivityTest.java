@@ -1,6 +1,7 @@
 package theokanning.rover.activity;
 
 import android.app.Instrumentation;
+import android.content.Context;
 import android.content.Intent;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.rule.ActivityTestRule;
@@ -30,6 +31,8 @@ public class DriverActivityTest {
     @Inject
     DriverChatClient mockDriverChatClient;
 
+    private Context context;
+
     @Rule
     public ActivityTestRule<DriverActivity> activityTestRule =
             new ActivityTestRule<>(DriverActivity.class, true, false);
@@ -38,6 +41,7 @@ public class DriverActivityTest {
     public void setup(){
         Instrumentation instrumentation = InstrumentationRegistry.getInstrumentation();
         TestApplication app = (TestApplication) instrumentation.getTargetContext().getApplicationContext();
+        context = app;
         app.setMockMode(true);
         TestComponent component = (TestComponent) app.getComponent();
         component.inject(this);
@@ -45,7 +49,7 @@ public class DriverActivityTest {
 
     @Test
     public void loginFailure(){
-        Mockito.when(mockDriverChatClient.login()).thenReturn(Observable.just(false));
+        Mockito.when(mockDriverChatClient.login(context)).thenReturn(Observable.just(false));
 
         Instrumentation.ActivityMonitor monitor = InstrumentationRegistry.getInstrumentation()
                 .addMonitor(ModeSelectionActivity.class.getName(), null, true);

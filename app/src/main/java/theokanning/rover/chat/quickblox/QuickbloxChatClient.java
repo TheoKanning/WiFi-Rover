@@ -2,6 +2,11 @@ package theokanning.rover.chat.quickblox;
 
 import android.content.Context;
 
+import com.quickblox.chat.QBChatService;
+import com.quickblox.chat.QBSignaling;
+import com.quickblox.chat.QBVideoChatWebRTCSignalingManager;
+import com.quickblox.chat.QBWebRTCSignaling;
+import com.quickblox.chat.listeners.QBVideoChatSignalingManagerListener;
 import com.quickblox.videochat.webrtc.QBRTCClient;
 
 import rx.Observable;
@@ -17,7 +22,7 @@ public class QuickBloxChatClient {
 
     protected Context context;
 
-    public QuickBloxChatClient(Context context) {
+    protected void setContext(Context context){
         this.context = context;
     }
 
@@ -36,6 +41,22 @@ public class QuickBloxChatClient {
 
     public void initVideoChatClient(){
         QBRTCClient.getInstance(context).prepareToProcessCalls();
+        //todo add session callbacks
+        enableReceivingVideoCalls();
+    }
+
+    private void enableReceivingVideoCalls() {
+        QBVideoChatWebRTCSignalingManager signalingManager = QBChatService.getInstance()
+                .getVideoChatWebRTCSignalingManager();
+
+        signalingManager.addSignalingManagerListener(new QBVideoChatSignalingManagerListener() {
+            @Override
+            public void signalingCreated(QBSignaling qbSignaling, boolean createdLocally) {
+                if (!createdLocally) {
+                    QBRTCClient.getInstance(context).addSignaling((QBWebRTCSignaling) qbSignaling);
+                }
+            }
+        });
     }
 
     /**

@@ -15,12 +15,9 @@ public class QuickBloxDriverChatClient extends QuickBloxChatClient implements Dr
 
     private static final String TAG = "QbDriverChatClient";
 
-    public QuickBloxDriverChatClient(Context context) {
-        super(context);
-    }
-
     @Override
-    public Observable<Boolean> login() {
+    public Observable<Boolean> login(Context context) {
+        setContext(context);
         User user = User.DRIVER;
         return loginAsUser(user, context);
     }

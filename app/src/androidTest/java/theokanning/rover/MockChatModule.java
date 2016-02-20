@@ -36,7 +36,7 @@ public class MockChatModule {
         if (mockMode) {
             return Mockito.mock(DriverChatClient.class);
         } else {
-            return new QuickBloxDriverChatClient(context);
+            return new QuickBloxDriverChatClient();
         }
     }
 
@@ -46,7 +46,7 @@ public class MockChatModule {
         if (mockMode) {
             return Mockito.mock(RobotChatClient.class);
         } else {
-            return new QuickBloxRobotChatClient(context);
+            return new QuickBloxRobotChatClient();
         }
     }
 }

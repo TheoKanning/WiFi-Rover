@@ -7,13 +7,9 @@ import android.widget.Toast;
 import com.quickblox.chat.QBChatService;
 import com.quickblox.chat.QBPrivateChat;
 import com.quickblox.chat.QBPrivateChatManager;
-import com.quickblox.chat.QBSignaling;
-import com.quickblox.chat.QBVideoChatWebRTCSignalingManager;
-import com.quickblox.chat.QBWebRTCSignaling;
 import com.quickblox.chat.exception.QBChatException;
 import com.quickblox.chat.listeners.QBMessageListener;
 import com.quickblox.chat.listeners.QBPrivateChatManagerListener;
-import com.quickblox.chat.listeners.QBVideoChatSignalingManagerListener;
 import com.quickblox.chat.model.QBChatMessage;
 import com.quickblox.videochat.webrtc.QBRTCClient;
 import com.quickblox.videochat.webrtc.QBRTCSession;
@@ -75,7 +71,7 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
 
     private void loginToChatService(){
         showLoggingInFragment();
-        robotChatClient.login().subscribe(new Subscriber<Boolean>() {
+        robotChatClient.login(this).subscribe(new Subscriber<Boolean>() {
             @Override
             public void onCompleted() {
 
@@ -101,26 +97,8 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
     }
 
     private void initVideoChatClient() {
-
         QBRTCClient.getInstance(this).addSessionCallbacksListener(this);
-
-        enableReceivingVideoCalls();
     }
-
-    private void enableReceivingVideoCalls() {
-        QBVideoChatWebRTCSignalingManager signalingManager = QBChatService.getInstance()
-                .getVideoChatWebRTCSignalingManager();
-
-        signalingManager.addSignalingManagerListener(new QBVideoChatSignalingManagerListener() {
-            @Override
-            public void signalingCreated(QBSignaling qbSignaling, boolean createdLocally) {
-                if (!createdLocally) {
-                    QBRTCClient.getInstance(RobotActivity.this).addSignaling((QBWebRTCSignaling) qbSignaling);
-                }
-            }
-        });
-    }
-
 
     private void initPrivateChatClient() {
         QBPrivateChatManagerListener privateChatManagerListener = new QBPrivateChatManagerListener() {
@@ -148,7 +126,6 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
             }
         }
     }
-
 
     /**
      * Sends a directional command to the robot after converting it to RL values

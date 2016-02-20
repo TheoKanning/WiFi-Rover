@@ -1,6 +1,7 @@
 package theokanning.rover.chat;
 
 import android.app.Instrumentation;
+import android.content.Context;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 
@@ -27,17 +28,20 @@ public class QuickBloxDriverChatClientTest {
     @Inject
     DriverChatClient driverChatClient;
 
+    private Context context;
+
     @Before
     public void setup() {
         Instrumentation instrumentation = InstrumentationRegistry.getInstrumentation();
         TestApplication app = (TestApplication) instrumentation.getTargetContext().getApplicationContext();
+        context = app;
         TestComponent component = (TestComponent) app.getComponent();
         component.inject(this);
     }
 
     @Test
     public void testLogin() {
-        final Observable<Boolean> observable = driverChatClient.login();
+        final Observable<Boolean> observable = driverChatClient.login(context);
         TestSubscriber<Boolean> subscriber = new TestSubscriber<>();
         observable.subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())

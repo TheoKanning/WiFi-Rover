@@ -23,12 +23,12 @@ public class ChatModule {
     @Singleton
     @Provides
     DriverChatClient provideDriverChatClient(){
-        return new QuickBloxDriverChatClient(context);
+        return new QuickBloxDriverChatClient();
     }
 
     @Singleton
     @Provides
     RobotChatClient provideRobotChatClient(){
-        return new QuickBloxRobotChatClient(context);
+        return new QuickBloxRobotChatClient();
     }
 }

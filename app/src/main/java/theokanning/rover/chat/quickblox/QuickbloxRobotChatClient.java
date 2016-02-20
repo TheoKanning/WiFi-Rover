@@ -13,12 +13,9 @@ import theokanning.rover.user.User;
  */
 public class QuickBloxRobotChatClient extends QuickBloxChatClient implements RobotChatClient {
 
-    public QuickBloxRobotChatClient(Context context) {
-        super(context);
-    }
-
     @Override
-    public Observable<Boolean> login() {
+    public Observable<Boolean> login(Context context) {
+        setContext(context);
         User user = User.ROBOT;
         return loginAsUser(user, context);
     }

@@ -1,5 +1,7 @@
 package theokanning.rover.chat.client;
 
+import android.content.Context;
+
 import rx.Observable;
 
 /**
@@ -8,7 +10,7 @@ import rx.Observable;
  * @author Theo Kanning
  */
 public interface ChatClient {
-    Observable<Boolean> login();
+    Observable<Boolean> login(Context context);
     //void endCall();
     //void changeAudioSettings(); //todo create object for parameters
     //void sendChatMessage(String message);

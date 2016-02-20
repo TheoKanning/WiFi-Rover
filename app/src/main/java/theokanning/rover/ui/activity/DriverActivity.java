@@ -7,11 +7,8 @@ import android.widget.Toast;
 
 import com.quickblox.chat.QBChatService;
 import com.quickblox.chat.QBPrivateChat;
-import com.quickblox.chat.QBSignaling;
-import com.quickblox.chat.QBWebRTCSignaling;
 import com.quickblox.chat.exception.QBChatException;
 import com.quickblox.chat.listeners.QBMessageListener;
-import com.quickblox.chat.listeners.QBVideoChatSignalingManagerListener;
 import com.quickblox.chat.model.QBChatMessage;
 import com.quickblox.videochat.webrtc.QBRTCClient;
 import com.quickblox.videochat.webrtc.QBRTCConfig;
@@ -69,7 +66,7 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
 
     private void loginToChatService(){
         showLoggingInFragment();
-        driverChatClient.login().subscribe(new Subscriber<Boolean>() {
+        driverChatClient.login(this).subscribe(new Subscriber<Boolean>() {
             @Override
             public void onCompleted() {
 
@@ -95,21 +92,8 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
     }
 
     private void initVideoChatClient() {
-        QBChatService.getInstance().getVideoChatWebRTCSignalingManager()
-                .addSignalingManagerListener(new QBVideoChatSignalingManagerListener() {
-                    @Override
-                    public void signalingCreated(QBSignaling qbSignaling, boolean createdLocally) {
-                        if (!createdLocally) {
-                            QBRTCClient.getInstance(DriverActivity.this).addSignaling((QBWebRTCSignaling) qbSignaling);
-                        }
-                    }
-                });
-
         QBRTCConfig.setAnswerTimeInterval(10); //Wait for 10 seconds before giving up call
-        QBRTCConfig.setDebugEnabled(false);
-
         QBRTCClient.getInstance(this).addSessionCallbacksListener(this);
-        QBRTCClient.getInstance(this).prepareToProcessCalls();
     }
 
     /**
