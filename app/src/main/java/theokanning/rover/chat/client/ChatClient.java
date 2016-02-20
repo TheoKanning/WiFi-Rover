@@ -12,5 +12,6 @@ public interface ChatClient {
     void unregisterChatCallbackListener();
 
     void endCall();
+    void setMicrophoneEnabled(boolean enabled);
     //void changeAudioSettings(); //todo create object for parameters
 }

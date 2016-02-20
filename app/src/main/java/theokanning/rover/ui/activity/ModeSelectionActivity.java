@@ -4,17 +4,10 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentTransaction;
 
-import javax.inject.Inject;
-
 import theokanning.rover.R;
-import theokanning.rover.RoverApplication;
-import theokanning.rover.chat.client.DriverChatClient;
 import theokanning.rover.ui.fragment.ModeSelectionFragment;
 
 public class ModeSelectionActivity extends BaseActivity implements ModeSelectionInterface {
-
-    @Inject
-    DriverChatClient driverChatClient;
 
     private static final String TAG = "ModeSelectionActivity";
 
@@ -22,7 +15,6 @@ public class ModeSelectionActivity extends BaseActivity implements ModeSelection
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_mode_selection);
-        ((RoverApplication) getApplication()).getComponent().inject(this);
     }
 
     @Override

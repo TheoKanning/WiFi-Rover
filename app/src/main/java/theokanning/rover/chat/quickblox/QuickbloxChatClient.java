@@ -17,6 +17,7 @@ import com.quickblox.videochat.webrtc.QBRTCConfig;
 import com.quickblox.videochat.webrtc.QBRTCSession;
 import com.quickblox.videochat.webrtc.QBRTCTypes;
 import com.quickblox.videochat.webrtc.callbacks.QBRTCClientSessionCallbacks;
+import com.quickblox.videochat.webrtc.callbacks.QBRTCClientVideoTracksCallbacks;
 
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
@@ -39,7 +40,7 @@ import theokanning.rover.user.User;
  *
  * @author Theo Kanning
  */
-public class QuickBloxChatClient implements RobotChatClient, DriverChatClient {
+public abstract class QuickBloxChatClient implements RobotChatClient, DriverChatClient {
 
     private static final String TAG = "QuickBloxChatClient";
 
@@ -66,6 +67,13 @@ public class QuickBloxChatClient implements RobotChatClient, DriverChatClient {
     public void endCall() {
         if (currentSession != null) {
             currentSession.hangUp(null);
+        }
+    }
+
+    @Override
+    public void setMicrophoneEnabled(boolean enabled) {
+        if (currentSession != null) {
+            currentSession.getMediaStreamManager().setAudioEnabled(enabled);
         }
     }
 
@@ -142,7 +150,7 @@ public class QuickBloxChatClient implements RobotChatClient, DriverChatClient {
         ids.add(User.ROBOT.getId());
 
         currentSession = QBRTCClient.getInstance(context).createNewSessionWithOpponents(ids,
-                        QBRTCTypes.QBConferenceType.QB_CONFERENCE_TYPE_VIDEO);
+                QBRTCTypes.QBConferenceType.QB_CONFERENCE_TYPE_VIDEO);
 
         Log.d(TAG, "Starting call");
         currentSession.startCall(currentSession.getUserInfo());
@@ -164,6 +172,20 @@ public class QuickBloxChatClient implements RobotChatClient, DriverChatClient {
             startPrivateChatWithRobot();
         }
         sendMessage(message);
+    }
+
+    @Override
+    public void registerQbVideoCallbacksListener(QBRTCClientVideoTracksCallbacks callbacks) {
+        if (currentSession != null) {
+            currentSession.addVideoTrackCallbacksListener(callbacks);
+        }
+    }
+
+    @Override
+    public void unregisterQbVideoCallbacksListener(QBRTCClientVideoTracksCallbacks callbacks) {
+        if (currentSession != null) {
+            currentSession.removeVideoTrackCallbacksListener(callbacks);
+        }
     }
 
     private void startPrivateChatWithDriver() {
@@ -191,6 +213,8 @@ public class QuickBloxChatClient implements RobotChatClient, DriverChatClient {
             //do nothing
         }
     }
+
+    protected abstract int getUserQuickbloxId();
 
     QBRTCClientSessionCallbacks sessionCallbacks = new QBRTCClientSessionCallbacks() {
         @Override

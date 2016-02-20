@@ -6,8 +6,8 @@ import javax.inject.Singleton;
 
 import dagger.Component;
 import theokanning.rover.ui.activity.DriverActivity;
-import theokanning.rover.ui.activity.ModeSelectionActivity;
 import theokanning.rover.ui.activity.RobotActivity;
+import theokanning.rover.ui.fragment.driver.ControlFragment;
 
 @Singleton
 @Component(modules = {
@@ -20,6 +20,6 @@ public interface RoverComponent {
 
     void inject(RobotActivity robotActivity);
 
-    void inject(ModeSelectionActivity modeSelectionActivity); //todo remove after moving login process
+    void inject(ControlFragment controlFragment);
 }
 

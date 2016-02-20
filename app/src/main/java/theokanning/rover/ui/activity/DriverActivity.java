@@ -6,7 +6,6 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.quickblox.videochat.webrtc.QBRTCSession;
-import com.quickblox.videochat.webrtc.callbacks.QBRTCClientVideoTracksCallbacks;
 
 import javax.inject.Inject;
 
@@ -45,6 +44,12 @@ public class DriverActivity extends BaseActivity implements SteeringListener, Dr
         super.onStop();
         driverChatClient.unregisterDriverChatCallbackListener();
         driverChatClient.unregisterChatCallbackListener();
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        driverChatClient.endCall();
     }
 
     private void loginToChatService() {
@@ -98,37 +103,6 @@ public class DriverActivity extends BaseActivity implements SteeringListener, Dr
     public void connect() {
         showWaitingFragment();
         driverChatClient.startCall();
-    }
-
-    public void addVideoTrackCallbacksListener(QBRTCClientVideoTracksCallbacks videoTracksCallbacks) {
-        if (currentSession != null) {
-            currentSession.addVideoTrackCallbacksListener(videoTracksCallbacks);
-        }
-    }
-
-    public void removeVideoTrackCallbacksListener(QBRTCClientVideoTracksCallbacks callbacks) {
-        if (currentSession != null) {
-            currentSession.removeVideoTrackCallbacksListener(callbacks);
-        }
-    }
-
-    public void setMicrophoneEnabled(boolean enabled) {
-        if (currentSession != null) {
-            currentSession.getMediaStreamManager().setAudioEnabled(enabled);
-        }
-    }
-
-    public void setStreamAudioEnabled(boolean enabled) {
-        if (currentSession != null) {
-            currentSession.getMediaStreamManager().switchAudioOutput();
-            //switches to headphones to mute sound...
-        }
-    }
-
-    @Override
-    public void onBackPressed() {
-        super.onBackPressed();
-        driverChatClient.endCall();
     }
 
     @Override

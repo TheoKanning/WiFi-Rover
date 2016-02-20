@@ -2,6 +2,8 @@ package theokanning.rover.chat.client;
 
 import android.content.Context;
 
+import com.quickblox.videochat.webrtc.callbacks.QBRTCClientVideoTracksCallbacks;
+
 import rx.Observable;
 import theokanning.rover.chat.callback.DriverChatCallbackListener;
 
@@ -17,4 +19,7 @@ public interface DriverChatClient extends ChatClient {
     void unregisterDriverChatCallbackListener();
 
     void sendMessageToRobot(String message);
+    //todo remove qb reference!
+    void registerQbVideoCallbacksListener(QBRTCClientVideoTracksCallbacks callbacks);
+    void unregisterQbVideoCallbacksListener(QBRTCClientVideoTracksCallbacks callbacks);
 }
