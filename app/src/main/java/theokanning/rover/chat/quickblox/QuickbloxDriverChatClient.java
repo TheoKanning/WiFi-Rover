@@ -11,6 +11,6 @@ import theokanning.rover.chat.DriverChatClient;
 public class QuickbloxDriverChatClient implements DriverChatClient{
     @Override
     public Observable<Boolean> logIn() {
-        return null;
+        return Observable.just(true);
     }
 }
