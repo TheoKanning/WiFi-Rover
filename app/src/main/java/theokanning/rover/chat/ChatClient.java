@@ -8,7 +8,7 @@ import rx.Observable;
  * @author Theo Kanning
  */
 public interface ChatClient {
-    Observable<Boolean> logIn();
+    Observable<Boolean> login();
     //void endCall();
     //void changeAudioSettings(); //todo create object for parameters
     //void sendChatMessage(String message);

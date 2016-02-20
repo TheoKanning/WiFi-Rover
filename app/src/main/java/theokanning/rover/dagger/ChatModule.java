@@ -1,5 +1,7 @@
 package theokanning.rover.dagger;
 
+import android.content.Context;
+
 import javax.inject.Singleton;
 
 import dagger.Module;
@@ -11,10 +13,17 @@ import theokanning.rover.chat.quickblox.QuickbloxRobotChatClient;
 
 @Module
 public class ChatModule {
+
+    private Context context;
+
+    public ChatModule(Context context) {
+        this.context = context;
+    }
+
     @Singleton
     @Provides
     DriverChatClient provideDriverChatClient(){
-        return new QuickbloxDriverChatClient();
+        return new QuickbloxDriverChatClient(context);
     }
 
     @Singleton

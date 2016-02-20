@@ -18,12 +18,19 @@ import org.jivesoftware.smack.SmackException;
 
 import java.util.List;
 
+import javax.inject.Inject;
+
 import theokanning.rover.R;
+import theokanning.rover.RoverApplication;
+import theokanning.rover.chat.DriverChatClient;
 import theokanning.rover.ui.fragment.ModeSelectionFragment;
 import theokanning.rover.ui.fragment.WaitingFragment;
 import theokanning.rover.user.User;
 
-public class ModeSelectionActivity extends BaseActivity implements ModeSelectionInterface{
+public class ModeSelectionActivity extends BaseActivity implements ModeSelectionInterface {
+
+    @Inject
+    DriverChatClient driverChatClient;
 
     private static final String TAG = "ModeSelectionActivity";
 
@@ -31,23 +38,25 @@ public class ModeSelectionActivity extends BaseActivity implements ModeSelection
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_mode_selection);
+        ((RoverApplication) getApplication()).getComponent().inject(this);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         showModeSelection();
+
     }
 
 
-    private void showModeSelection(){
+    private void showModeSelection() {
         FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
         ft.replace(R.id.fragment_container, new ModeSelectionFragment());
         ft.commit();
     }
 
 
-    private void showLoggingIn(){
+    private void showLoggingIn() {
         WaitingFragment fragment = WaitingFragment.newInstance("Logging in to chat service...");
         setFragment(fragment, true);
     }
@@ -135,10 +144,11 @@ public class ModeSelectionActivity extends BaseActivity implements ModeSelection
     /**
      * Adds user to QuickBlox server, only needs to be called once per user
      * Shows a toast with request result and prints all error messages if any are received
+     *
      * @param newUser new user to be added to server
      * @param context context in which to show toast message
      */
-    public static void addUserToQuickBlox(final QBUser newUser, final Context context){
+    public static void addUserToQuickBlox(final QBUser newUser, final Context context) {
         QBUsers.signUp(newUser, new QBEntityCallbackImpl<QBUser>() {
             @Override
             public void onSuccess(QBUser user, Bundle args) {

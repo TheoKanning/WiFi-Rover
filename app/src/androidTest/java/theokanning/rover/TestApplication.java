@@ -15,7 +15,7 @@ public class TestApplication extends RoverApplication {
     public void onCreate() {
         super.onCreate();
         testComponent = DaggerTestComponent.builder()
-                .testModule(new TestModule())
+                .testModule(new TestModule(this))
                 .usbModule(new UsbModule(this))
                 .build();
     }

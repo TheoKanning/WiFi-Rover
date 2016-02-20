@@ -11,7 +11,9 @@ import org.junit.runner.RunWith;
 import javax.inject.Inject;
 
 import rx.Observable;
+import rx.android.schedulers.AndroidSchedulers;
 import rx.observers.TestSubscriber;
+import rx.schedulers.Schedulers;
 import theokanning.rover.TestApplication;
 import theokanning.rover.TestComponent;
 
@@ -33,13 +35,22 @@ public class QuickbloxDriverChatClientTest {
     }
 
     @Test
-    public void testLogin(){
-        final Observable<Boolean> observable = driverChatClient.logIn();
+    public void testLogin() {
+        final Observable<Boolean> observable = driverChatClient.login();
         TestSubscriber<Boolean> subscriber = new TestSubscriber<>();
-        observable.subscribe(subscriber);
+        observable.subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(subscriber);
 
-        if(!subscriber.getOnErrorEvents().isEmpty())
-            fail("Unexpected Error:" + subscriber.getOnErrorEvents().get(0).getMessage());
+        try {
+            //todo fix threading issue, currently does not wait for observable to emit before asserting
+            Thread.sleep(10000);
+        } catch (InterruptedException e) {
+            //do nothing
+        }
+
+        if (!subscriber.getOnErrorEvents().isEmpty())
+            fail("Unexpected Error: " + subscriber.getOnErrorEvents().get(0).getMessage());
 
         subscriber.assertCompleted();
         subscriber.assertValueCount(1);

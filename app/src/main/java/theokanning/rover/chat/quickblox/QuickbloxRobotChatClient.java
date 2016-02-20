@@ -10,7 +10,7 @@ import theokanning.rover.chat.RobotChatClient;
  */
 public class QuickbloxRobotChatClient implements RobotChatClient{
     @Override
-    public Observable<Boolean> logIn() {
+    public Observable<Boolean> login() {
         return null;
     }
 }
