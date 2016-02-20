@@ -18,7 +18,7 @@ import javax.inject.Inject;
 import rx.Observable;
 import theokanning.rover.TestApplication;
 import theokanning.rover.TestComponent;
-import theokanning.rover.chat.DriverChatClient;
+import theokanning.rover.chat.client.DriverChatClient;
 import theokanning.rover.ui.activity.DriverActivity;
 import theokanning.rover.ui.activity.ModeSelectionActivity;
 

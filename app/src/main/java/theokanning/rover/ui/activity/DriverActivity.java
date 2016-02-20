@@ -33,7 +33,7 @@ import javax.inject.Inject;
 import rx.Subscriber;
 import theokanning.rover.R;
 import theokanning.rover.RoverApplication;
-import theokanning.rover.chat.DriverChatClient;
+import theokanning.rover.chat.client.DriverChatClient;
 import theokanning.rover.ui.fragment.WaitingFragment;
 import theokanning.rover.ui.fragment.driver.ConnectFragment;
 import theokanning.rover.ui.fragment.driver.ControlFragment;
@@ -83,7 +83,7 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
             @Override
             public void onNext(Boolean success) {
                 if(success){
-                    initQbrtcClient();
+                    initVideoChatClient();
                     showConnectFragment();
                 } else {
                     Intent intent = new Intent(DriverActivity.this, ModeSelectionActivity.class);
@@ -92,11 +92,9 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
                 }
             }
         });
-
     }
 
-    private void initQbrtcClient() {
-
+    private void initVideoChatClient() {
         QBChatService.getInstance().getVideoChatWebRTCSignalingManager()
                 .addSignalingManagerListener(new QBVideoChatSignalingManagerListener() {
                     @Override

@@ -8,8 +8,8 @@ import javax.inject.Singleton;
 
 import dagger.Module;
 import dagger.Provides;
-import theokanning.rover.chat.DriverChatClient;
-import theokanning.rover.chat.RobotChatClient;
+import theokanning.rover.chat.client.DriverChatClient;
+import theokanning.rover.chat.client.RobotChatClient;
 import theokanning.rover.chat.quickblox.QuickBloxDriverChatClient;
 import theokanning.rover.chat.quickblox.QuickBloxRobotChatClient;
 

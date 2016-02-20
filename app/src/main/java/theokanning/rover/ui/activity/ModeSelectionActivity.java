@@ -8,7 +8,7 @@ import javax.inject.Inject;
 
 import theokanning.rover.R;
 import theokanning.rover.RoverApplication;
-import theokanning.rover.chat.DriverChatClient;
+import theokanning.rover.chat.client.DriverChatClient;
 import theokanning.rover.ui.fragment.ModeSelectionFragment;
 
 public class ModeSelectionActivity extends BaseActivity implements ModeSelectionInterface {

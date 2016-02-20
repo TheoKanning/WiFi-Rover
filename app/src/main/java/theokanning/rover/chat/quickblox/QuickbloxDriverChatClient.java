@@ -3,7 +3,7 @@ package theokanning.rover.chat.quickblox;
 import android.content.Context;
 
 import rx.Observable;
-import theokanning.rover.chat.DriverChatClient;
+import theokanning.rover.chat.client.DriverChatClient;
 import theokanning.rover.user.User;
 
 /**
@@ -15,10 +15,8 @@ public class QuickBloxDriverChatClient extends QuickBloxChatClient implements Dr
 
     private static final String TAG = "QbDriverChatClient";
 
-    private Context context;
-
     public QuickBloxDriverChatClient(Context context) {
-        this.context = context;
+        super(context);
     }
 
     @Override

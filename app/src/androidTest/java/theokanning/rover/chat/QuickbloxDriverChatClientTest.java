@@ -16,6 +16,7 @@ import rx.observers.TestSubscriber;
 import rx.schedulers.Schedulers;
 import theokanning.rover.TestApplication;
 import theokanning.rover.TestComponent;
+import theokanning.rover.chat.client.DriverChatClient;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;

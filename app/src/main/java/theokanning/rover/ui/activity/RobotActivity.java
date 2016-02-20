@@ -30,7 +30,7 @@ import javax.inject.Inject;
 import rx.Subscriber;
 import theokanning.rover.R;
 import theokanning.rover.RoverApplication;
-import theokanning.rover.chat.RobotChatClient;
+import theokanning.rover.chat.client.RobotChatClient;
 import theokanning.rover.ui.fragment.WaitingFragment;
 import theokanning.rover.ui.fragment.robot.ConnectedFragment;
 import theokanning.rover.usb.UsbScanner;
@@ -101,11 +101,26 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
     }
 
     private void initVideoChatClient() {
-        QBRTCClient.getInstance(this).prepareToProcessCalls();
+
         QBRTCClient.getInstance(this).addSessionCallbacksListener(this);
 
         enableReceivingVideoCalls();
     }
+
+    private void enableReceivingVideoCalls() {
+        QBVideoChatWebRTCSignalingManager signalingManager = QBChatService.getInstance()
+                .getVideoChatWebRTCSignalingManager();
+
+        signalingManager.addSignalingManagerListener(new QBVideoChatSignalingManagerListener() {
+            @Override
+            public void signalingCreated(QBSignaling qbSignaling, boolean createdLocally) {
+                if (!createdLocally) {
+                    QBRTCClient.getInstance(RobotActivity.this).addSignaling((QBWebRTCSignaling) qbSignaling);
+                }
+            }
+        });
+    }
+
 
     private void initPrivateChatClient() {
         QBPrivateChatManagerListener privateChatManagerListener = new QBPrivateChatManagerListener() {
@@ -134,19 +149,6 @@ public class RobotActivity extends BaseActivity implements QBRTCClientSessionCal
         }
     }
 
-    private void enableReceivingVideoCalls() {
-        QBVideoChatWebRTCSignalingManager signalingManager = QBChatService.getInstance()
-                .getVideoChatWebRTCSignalingManager();
-
-        signalingManager.addSignalingManagerListener(new QBVideoChatSignalingManagerListener() {
-            @Override
-            public void signalingCreated(QBSignaling qbSignaling, boolean createdLocally) {
-                if (!createdLocally) {
-                    QBRTCClient.getInstance(RobotActivity.this).addSignaling((QBWebRTCSignaling) qbSignaling);
-                }
-            }
-        });
-    }
 
     /**
      * Sends a directional command to the robot after converting it to RL values

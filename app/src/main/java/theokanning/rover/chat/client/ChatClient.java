@@ -1,4 +1,4 @@
-package theokanning.rover.chat;
+package theokanning.rover.chat.client;
 
 import rx.Observable;
 
