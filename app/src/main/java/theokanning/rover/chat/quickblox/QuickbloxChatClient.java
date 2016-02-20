@@ -36,7 +36,7 @@ import theokanning.rover.user.User;
  *
  * @author Theo Kanning
  */
-public class QuickBloxChatClient implements RobotChatClient, DriverChatClient{
+public class QuickBloxChatClient implements RobotChatClient, DriverChatClient {
 
     private static final String TAG = "QuickBloxChatClient";
 
@@ -64,7 +64,7 @@ public class QuickBloxChatClient implements RobotChatClient, DriverChatClient{
             @Override
             public void call(final Subscriber<? super Boolean> subscriber) {
                 QuickBloxLoginTask task = new QuickBloxLoginTask(user, context,
-                        new LoginTaskSubscriberAdapter(subscriber));
+                        new LoginTaskSubscriberAdapter(subscriber, QuickBloxChatClient.this));
                 task.execute();
             }
         });
@@ -112,7 +112,11 @@ public class QuickBloxChatClient implements RobotChatClient, DriverChatClient{
 
     @Override
     public void sendMessageToDriver(String message) {
-
+        //todo consider making this abstract and forcing subclasses to implement getUserId/getOpponentId()?
+        if (privateChat == null) {
+            startPrivateChatWithDriver();
+        }
+        sendMessage(message);
     }
 
     @Override
@@ -135,22 +139,34 @@ public class QuickBloxChatClient implements RobotChatClient, DriverChatClient{
     @Override
     public void sendMessageToRobot(String message) {
         if (privateChat == null) {
-            //todo this should be in its own method
-            Integer opponentId = User.ROBOT.getId();
-            privateChat = QBChatService.getInstance()
-                    .getPrivateChatManager()
-                    .createChat(opponentId, privateChatMessageListener);
+            startPrivateChatWithRobot();
         }
+        sendMessage(message);
+    }
 
+    private void startPrivateChatWithDriver() {
+        Integer opponentId = User.DRIVER.getId();
+        startPrivateChat(opponentId);
+    }
+
+    private void startPrivateChatWithRobot() {
+        Integer opponentId = User.ROBOT.getId();
+        startPrivateChat(opponentId);
+    }
+
+    private void startPrivateChat(Integer opponentId) {
+        privateChat = QBChatService.getInstance()
+                .getPrivateChatManager()
+                .createChat(opponentId, privateChatMessageListener);
+    }
+
+    private void sendMessage(String message) {
         try {
-            //todo wrap in method
             QBChatMessage chatMessage = new QBChatMessage();
             chatMessage.setBody(message);
             privateChat.sendMessage(chatMessage);
-        } catch (XMPPException e) {
-
-        } catch (SmackException.NotConnectedException e) {
-
+        } catch (XMPPException | SmackException.NotConnectedException e) {
+            //do nothing
         }
     }
 
@@ -208,27 +224,5 @@ public class QuickBloxChatClient implements RobotChatClient, DriverChatClient{
         }
     };
 
-    /**
-     * Adapts {@link QuickBloxLoginTask.LoginTaskCallback} events to a subscriber
-     */
-    private class LoginTaskSubscriberAdapter implements QuickBloxLoginTask.LoginTaskCallback {
-        private Subscriber<? super Boolean> subscriber;
 
-        public LoginTaskSubscriberAdapter(Subscriber<? super Boolean> subscriber) {
-            this.subscriber = subscriber;
-        }
-
-        @Override
-        public void onSuccess() {
-            subscriber.onNext(true);
-            subscriber.onCompleted();
-            QuickBloxChatClient.this.initVideoChatClient();
-        }
-
-        @Override
-        public void onFailure() {
-            subscriber.onNext(false);
-            subscriber.onCompleted();
-        }
-    }
 }

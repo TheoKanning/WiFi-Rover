@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.quickblox.chat.QBPrivateChat;
 import com.quickblox.videochat.webrtc.QBRTCClient;
 import com.quickblox.videochat.webrtc.QBRTCSession;
 import com.quickblox.videochat.webrtc.QBRTCTypes;
@@ -18,7 +17,6 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
-import rx.Subscriber;
 import theokanning.rover.R;
 import theokanning.rover.RoverApplication;
 import theokanning.rover.chat.callback.DriverChatCallbackListener;
@@ -39,7 +37,6 @@ public class DriverActivity extends BaseActivity implements SteeringListener, Dr
     DriverChatClient driverChatClient;
 
     private QBRTCSession currentSession;
-    private QBPrivateChat privateChat;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,28 +55,15 @@ public class DriverActivity extends BaseActivity implements SteeringListener, Dr
         driverChatClient.unregisterChatCallbackListener();
     }
 
-    private void loginToChatService(){
+    private void loginToChatService() {
         showLoggingInFragment();
-        driverChatClient.loginAsDriver(this).subscribe(new Subscriber<Boolean>() {
-            @Override
-            public void onCompleted() {
-
-            }
-
-            @Override
-            public void onError(Throwable e) {
-
-            }
-
-            @Override
-            public void onNext(Boolean success) {
-                if(success){
-                    showConnectFragment();
-                } else {
-                    Intent intent = new Intent(DriverActivity.this, ModeSelectionActivity.class);
-                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    startActivity(intent);
-                }
+        driverChatClient.loginAsDriver(this).subscribe((success) -> {
+            if (success) {
+                showConnectFragment();
+            } else {
+                Intent intent = new Intent(DriverActivity.this, ModeSelectionActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
             }
         });
     }
@@ -89,7 +73,7 @@ public class DriverActivity extends BaseActivity implements SteeringListener, Dr
     }
 
     private void showLoggingInFragment() {
-        WaitingFragment fragment = WaitingFragment.newInstance( "Logging in to chat service...");
+        WaitingFragment fragment = WaitingFragment.newInstance("Logging in to chat service...");
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.fragment_container, fragment)
@@ -101,14 +85,14 @@ public class DriverActivity extends BaseActivity implements SteeringListener, Dr
     }
 
     private void showWaitingFragment() {
-        WaitingFragment fragment = WaitingFragment.newInstance( "Attempting to connect to robot...");
+        WaitingFragment fragment = WaitingFragment.newInstance("Attempting to connect to robot...");
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.fragment_container, fragment)
                 .commit();
     }
 
-    private void showControlFragment(){
+    private void showControlFragment() {
         ControlFragment fragment = new ControlFragment();
         getSupportFragmentManager()
                 .beginTransaction()
@@ -143,20 +127,20 @@ public class DriverActivity extends BaseActivity implements SteeringListener, Dr
         }
     }
 
-    public void removeVideoTrackCallbacksListener(QBRTCClientVideoTracksCallbacks callbacks){
-        if(currentSession != null){
+    public void removeVideoTrackCallbacksListener(QBRTCClientVideoTracksCallbacks callbacks) {
+        if (currentSession != null) {
             currentSession.removeVideoTrackCallbacksListener(callbacks);
         }
     }
 
-    public void setMicrophoneEnabled(boolean enabled){
-        if(currentSession != null){
+    public void setMicrophoneEnabled(boolean enabled) {
+        if (currentSession != null) {
             currentSession.getMediaStreamManager().setAudioEnabled(enabled);
         }
     }
 
-    public void setStreamAudioEnabled(boolean enabled){
-        if(currentSession != null){
+    public void setStreamAudioEnabled(boolean enabled) {
+        if (currentSession != null) {
             currentSession.getMediaStreamManager().switchAudioOutput();
             //switches to headphones to mute sound...
         }
