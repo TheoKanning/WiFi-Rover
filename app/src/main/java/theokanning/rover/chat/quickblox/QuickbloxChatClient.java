@@ -56,150 +56,20 @@ public abstract class QuickBloxChatClient implements RobotChatClient, DriverChat
     private RobotChatCallbackListener robotChatCallbackListener;
     private DriverChatCallbackListener driverChatCallbackListener;
 
-    @Override
-    public void registerChatCallbackListener(ChatCallbackListener chatCallbackListener) {
-        this.chatCallbackListener = chatCallbackListener;
-    }
-
-    @Override
-    public void unregisterChatCallbackListener() {
-        chatCallbackListener = null;
-    }
-
-    @Override
-    public void endCall() {
-        if (currentSession != null) {
-            currentSession.hangUp(null);
+    QBMessageListener<QBPrivateChat> privateChatMessageListener = new QBMessageListener<QBPrivateChat>() {
+        @Override
+        public void processMessage(QBPrivateChat privateChat, final QBChatMessage chatMessage) {
+            chatCallbackListener.onChatMessageReceived(chatMessage.getBody());
         }
-    }
 
-    @Override
-    public void setMicrophoneEnabled(boolean enabled) {
-        if (currentSession != null) {
-            currentSession.getMediaStreamManager().setAudioEnabled(enabled);
+        @Override
+        public void processError(QBPrivateChat privateChat, QBChatException error, QBChatMessage originMessage) {
+            Log.e(TAG, error.getMessage());
         }
-    }
-
-    public void enableChatServices() {
-        //todo make it more clear where this is being called
-        QBRTCClient.getInstance(context).prepareToProcessCalls();
-        QBRTCClient.getInstance(context).addSessionCallbacksListener(sessionCallbacks);
-        QBRTCConfig.setAnswerTimeInterval(10);
-        enableReceivingVideoCalls();
-        enableReceivingPrivateChats();
-    }
-
-    private void enableReceivingVideoCalls() {
-        QBVideoChatWebRTCSignalingManager signalingManager = QBChatService.getInstance()
-                .getVideoChatWebRTCSignalingManager();
-
-        signalingManager.addSignalingManagerListener((qbSignaling, createdLocally) -> {
-            if (!createdLocally) {
-                QBRTCClient.getInstance(context).addSignaling((QBWebRTCSignaling) qbSignaling);
-            }
-        });
-    }
-
-    @Override
-    public Observable<Boolean> login(final Context context) {
-        this.context = context;
-        final QBUser user = getUser();
-        Observable<Boolean> observable = Observable.create(new Observable.OnSubscribe<Boolean>() {
-            @Override
-            public void call(final Subscriber<? super Boolean> subscriber) {
-                QuickBloxLoginTask task = new QuickBloxLoginTask(user, context,
-                        new LoginTaskSubscriberAdapter(subscriber, QuickBloxChatClient.this));
-                task.execute();
-            }
-        });
-
-        return observable;
-    }
-
-    @Override
-    public void registerRobotChatCallbackListener(RobotChatCallbackListener listener) {
-        this.robotChatCallbackListener = listener;
-    }
-
-    @Override
-    public void unregisterRobotChatCallbackListener() {
-        this.robotChatCallbackListener = null;
-    }
-
-    @Override
-    public void sendMessage(String message) {
-        if (privateChat == null) {
-            startPrivateChat();
-        }
-        trySendingMessage(message);
-    }
-
-    @Override
-    public void startCall() {
-        List<Integer> ids = new ArrayList<>();
-        ids.add(User.ROBOT.getId());
-
-        currentSession = QBRTCClient.getInstance(context).createNewSessionWithOpponents(ids,
-                QBRTCTypes.QBConferenceType.QB_CONFERENCE_TYPE_VIDEO);
-
-        Log.d(TAG, "Starting call");
-        currentSession.startCall(currentSession.getUserInfo());
-    }
-
-    @Override
-    public void registerDriverChatCallbackListener(DriverChatCallbackListener listener) {
-        this.driverChatCallbackListener = listener;
-    }
-
-    @Override
-    public void unregisterDriverChatCallbackListener() {
-        this.driverChatCallbackListener = null;
-    }
-
-
-    @Override
-    public void registerQbVideoCallbacksListener(QBRTCClientVideoTracksCallbacks callbacks) {
-        if (currentSession != null) {
-            currentSession.addVideoTrackCallbacksListener(callbacks);
-        }
-    }
-
-    @Override
-    public void unregisterQbVideoCallbacksListener(QBRTCClientVideoTracksCallbacks callbacks) {
-        if (currentSession != null) {
-            currentSession.removeVideoTrackCallbacksListener(callbacks);
-        }
-    }
-
-    private void startPrivateChat() {
-        Integer opponentId = getOpponent().getId();
-        privateChat = QBChatService.getInstance()
-                .getPrivateChatManager()
-                .createChat(opponentId, privateChatMessageListener);
-    }
-
-    private void enableReceivingPrivateChats(){
-        QBPrivateChatManagerListener privateChatManagerListener = (incomingPrivateChat, createdLocally) -> {
-            if (!createdLocally) {
-                privateChat = incomingPrivateChat;
-                privateChat.addMessageListener(privateChatMessageListener);
-            }
-        };
-        QBPrivateChatManager privateChatManager = QBChatService.getInstance().getPrivateChatManager();
-        privateChatManager.addPrivateChatManagerListener(privateChatManagerListener);
-    }
-
-    private void trySendingMessage(String message) {
-        try {
-            QBChatMessage chatMessage = new QBChatMessage();
-            chatMessage.setBody(message);
-            privateChat.sendMessage(chatMessage);
-        } catch (XMPPException | SmackException.NotConnectedException e) {
-            //do nothing
-        }
-    }
+    };
 
     QBRTCClientSessionCallbacks sessionCallbacks = new QBRTCClientSessionCallbacks() {
+        //todo create a new class implements callbacks, then extend that class and only override those that are needed
         @Override
         public void onReceiveNewSession(QBRTCSession qbrtcSession) {
             ((Activity) context).runOnUiThread(() -> {
@@ -246,17 +116,147 @@ public abstract class QuickBloxChatClient implements RobotChatClient, DriverChat
         }
     };
 
-    QBMessageListener<QBPrivateChat> privateChatMessageListener = new QBMessageListener<QBPrivateChat>() {
-        @Override
-        public void processMessage(QBPrivateChat privateChat, final QBChatMessage chatMessage) {
-            chatCallbackListener.onChatMessageReceived(chatMessage.getBody());
-        }
+    @Override
+    public Observable<Boolean> login(final Context context) {
+        this.context = context;
+        final QBUser user = getUser();
+        Observable<Boolean> observable = Observable.create(new Observable.OnSubscribe<Boolean>() {
+            @Override
+            public void call(final Subscriber<? super Boolean> subscriber) {
+                QuickBloxLoginTask task = new QuickBloxLoginTask(user, context,
+                        new LoginTaskSubscriberAdapter(subscriber, QuickBloxChatClient.this));
+                task.execute();
+            }
+        });
 
-        @Override
-        public void processError(QBPrivateChat privateChat, QBChatException error, QBChatMessage originMessage) {
-            Log.e(TAG, error.getMessage());
+        return observable;
+    }
+
+    public void enableChatServices() {
+        //todo make it more clear where this is being called
+        QBRTCClient.getInstance(context).prepareToProcessCalls();
+        QBRTCClient.getInstance(context).addSessionCallbacksListener(sessionCallbacks);
+        QBRTCConfig.setAnswerTimeInterval(10);
+        enableReceivingVideoCalls();
+        enableReceivingPrivateChats();
+    }
+
+    private void enableReceivingVideoCalls() {
+        QBVideoChatWebRTCSignalingManager signalingManager = QBChatService.getInstance()
+                .getVideoChatWebRTCSignalingManager();
+
+        signalingManager.addSignalingManagerListener((qbSignaling, createdLocally) -> {
+            if (!createdLocally) {
+                QBRTCClient.getInstance(context).addSignaling((QBWebRTCSignaling) qbSignaling);
+            }
+        });
+    }
+
+    private void enableReceivingPrivateChats() {
+        QBPrivateChatManagerListener privateChatManagerListener = (incomingPrivateChat, createdLocally) -> {
+            if (!createdLocally) {
+                privateChat = incomingPrivateChat;
+                privateChat.addMessageListener(privateChatMessageListener);
+            }
+        };
+        QBPrivateChatManager privateChatManager = QBChatService.getInstance().getPrivateChatManager();
+        privateChatManager.addPrivateChatManagerListener(privateChatManagerListener);
+    }
+
+    @Override
+    public void startCall() {
+        List<Integer> ids = new ArrayList<>();
+        ids.add(User.ROBOT.getId());
+
+        currentSession = QBRTCClient.getInstance(context).createNewSessionWithOpponents(ids,
+                QBRTCTypes.QBConferenceType.QB_CONFERENCE_TYPE_VIDEO);
+
+        Log.d(TAG, "Starting call");
+        currentSession.startCall(currentSession.getUserInfo());
+    }
+
+    private void startPrivateChat() {
+        Integer opponentId = getOpponent().getId();
+        privateChat = QBChatService.getInstance()
+                .getPrivateChatManager()
+                .createChat(opponentId, privateChatMessageListener);
+    }
+
+    @Override
+    public void sendMessage(String message) {
+        if (privateChat == null) {
+            startPrivateChat();
         }
-    };
+        trySendingMessage(message);
+    }
+
+    private void trySendingMessage(String message) {
+        try {
+            QBChatMessage chatMessage = new QBChatMessage();
+            chatMessage.setBody(message);
+            privateChat.sendMessage(chatMessage);
+        } catch (XMPPException | SmackException.NotConnectedException e) {
+            //do nothing
+        }
+    }
+
+    @Override
+    public void endCall() {
+        if (currentSession != null) {
+            currentSession.hangUp(null);
+        }
+    }
+
+    @Override
+    public void setMicrophoneEnabled(boolean enabled) {
+        if (currentSession != null) {
+            currentSession.getMediaStreamManager().setAudioEnabled(enabled);
+        }
+    }
+
+    @Override
+    public void registerQbVideoCallbacksListener(QBRTCClientVideoTracksCallbacks callbacks) {
+        if (currentSession != null) {
+            currentSession.addVideoTrackCallbacksListener(callbacks);
+        }
+    }
+
+    @Override
+    public void unregisterQbVideoCallbacksListener(QBRTCClientVideoTracksCallbacks callbacks) {
+        if (currentSession != null) {
+            currentSession.removeVideoTrackCallbacksListener(callbacks);
+        }
+    }
+
+    @Override
+    public void registerChatCallbackListener(ChatCallbackListener chatCallbackListener) {
+        this.chatCallbackListener = chatCallbackListener;
+    }
+
+    @Override
+    public void unregisterChatCallbackListener() {
+        chatCallbackListener = null;
+    }
+
+    @Override
+    public void registerRobotChatCallbackListener(RobotChatCallbackListener listener) {
+        this.robotChatCallbackListener = listener;
+    }
+
+    @Override
+    public void unregisterRobotChatCallbackListener() {
+        this.robotChatCallbackListener = null;
+    }
+
+    @Override
+    public void registerDriverChatCallbackListener(DriverChatCallbackListener listener) {
+        this.driverChatCallbackListener = listener;
+    }
+
+    @Override
+    public void unregisterDriverChatCallbackListener() {
+        this.driverChatCallbackListener = null;
+    }
 
     protected abstract QBUser getUser();
 
