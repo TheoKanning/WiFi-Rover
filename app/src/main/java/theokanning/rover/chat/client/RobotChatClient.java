@@ -8,6 +8,7 @@ import theokanning.rover.chat.callback.RobotChatCallbackListener;
  * @author Theo Kanning
  */
 public interface RobotChatClient extends ChatClient {
+
     void registerRobotChatCallbackListener(RobotChatCallbackListener listener);
     void unregisterRobotChatCallbackListener();
 }

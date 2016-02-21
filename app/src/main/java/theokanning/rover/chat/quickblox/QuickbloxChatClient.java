@@ -1,14 +1,17 @@
 package theokanning.rover.chat.quickblox;
 
+import android.app.Activity;
 import android.content.Context;
 import android.util.Log;
 
 import com.quickblox.chat.QBChatService;
 import com.quickblox.chat.QBPrivateChat;
+import com.quickblox.chat.QBPrivateChatManager;
 import com.quickblox.chat.QBVideoChatWebRTCSignalingManager;
 import com.quickblox.chat.QBWebRTCSignaling;
 import com.quickblox.chat.exception.QBChatException;
 import com.quickblox.chat.listeners.QBMessageListener;
+import com.quickblox.chat.listeners.QBPrivateChatManagerListener;
 import com.quickblox.chat.model.QBChatMessage;
 import com.quickblox.users.model.QBUser;
 import com.quickblox.videochat.webrtc.QBRTCClient;
@@ -22,6 +25,7 @@ import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -76,11 +80,13 @@ public abstract class QuickBloxChatClient implements RobotChatClient, DriverChat
         }
     }
 
-    public void initVideoChatClient() {
+    public void enableChatServices() {
+        //todo make it more clear where this is being called
         QBRTCClient.getInstance(context).prepareToProcessCalls();
         QBRTCClient.getInstance(context).addSessionCallbacksListener(sessionCallbacks);
         QBRTCConfig.setAnswerTimeInterval(10);
         enableReceivingVideoCalls();
+        enableReceivingPrivateChats();
     }
 
     private void enableReceivingVideoCalls() {
@@ -172,6 +178,17 @@ public abstract class QuickBloxChatClient implements RobotChatClient, DriverChat
                 .createChat(opponentId, privateChatMessageListener);
     }
 
+    private void enableReceivingPrivateChats(){
+        QBPrivateChatManagerListener privateChatManagerListener = (incomingPrivateChat, createdLocally) -> {
+            if (!createdLocally) {
+                privateChat = incomingPrivateChat;
+                privateChat.addMessageListener(privateChatMessageListener);
+            }
+        };
+        QBPrivateChatManager privateChatManager = QBChatService.getInstance().getPrivateChatManager();
+        privateChatManager.addPrivateChatManagerListener(privateChatManagerListener);
+    }
+
     private void trySendingMessage(String message) {
         try {
             QBChatMessage chatMessage = new QBChatMessage();
@@ -185,6 +202,11 @@ public abstract class QuickBloxChatClient implements RobotChatClient, DriverChat
     QBRTCClientSessionCallbacks sessionCallbacks = new QBRTCClientSessionCallbacks() {
         @Override
         public void onReceiveNewSession(QBRTCSession qbrtcSession) {
+            ((Activity) context).runOnUiThread(() -> {
+                qbrtcSession.acceptCall(new HashMap<>());
+                currentSession = qbrtcSession;
+            });
+
             robotChatCallbackListener.onCallReceived();
         }
 

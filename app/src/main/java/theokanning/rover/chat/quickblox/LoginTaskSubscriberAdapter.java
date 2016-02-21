@@ -21,7 +21,7 @@ public class LoginTaskSubscriberAdapter implements QuickBloxLoginTask.LoginTaskC
     public void onSuccess() {
         subscriber.onNext(true);
         subscriber.onCompleted();
-        chatClient.initVideoChatClient();
+        chatClient.enableChatServices();
     }
 
     @Override

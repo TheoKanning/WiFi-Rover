@@ -22,6 +22,8 @@ import theokanning.rover.ui.fragment.driver.ControlFragment;
 public class DriverActivity extends BaseActivity implements DriverChatCallbackListener {
     private static final String TAG = "DriverActivity";
 
+    //todo understand fragment back stack
+
     @Inject
     DriverChatClient driverChatClient;
 
