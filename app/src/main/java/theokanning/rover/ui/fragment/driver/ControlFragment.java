@@ -16,13 +16,15 @@ import com.quickblox.videochat.webrtc.view.RTCGLVideoView;
 
 import org.webrtc.VideoRenderer;
 
+import javax.inject.Inject;
+
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.OnTouch;
 import theokanning.rover.R;
-import theokanning.rover.ui.activity.DriverActivity;
-import theokanning.rover.ui.activity.SteeringListener;
+import theokanning.rover.RoverApplication;
+import theokanning.rover.chat.client.DriverChatClient;
 import theokanning.rover.ui.activity.SteeringListener.Direction;
 import theokanning.rover.ui.fragment.BaseFragment;
 
@@ -31,6 +33,8 @@ import theokanning.rover.ui.fragment.BaseFragment;
  */
 public class ControlFragment extends BaseFragment implements QBRTCClientVideoTracksCallbacks {
 
+    @Inject
+    DriverChatClient driverChatClient;
 
     @Bind(R.id.videoView)
     public RTCGLVideoView videoView;
@@ -38,19 +42,16 @@ public class ControlFragment extends BaseFragment implements QBRTCClientVideoTra
     @Bind(R.id.audio_toggle)
     ToggleButton audioToggle;
 
-    private SteeringListener steeringListener;
-
     private Direction currentDirection;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-
         View view = inflater.inflate(R.layout.fragment_control, container, false);
+        ((RoverApplication) getActivity().getApplication()).getComponent().inject(this);
         ButterKnife.bind(this, view);
 
-        ((DriverActivity) getActivity()).addVideoTrackCallbacksListener(this);
-        steeringListener = (SteeringListener) getActivity();
+        driverChatClient.registerQbVideoCallbacksListener(this);
         return view;
     }
 
@@ -126,20 +127,20 @@ public class ControlFragment extends BaseFragment implements QBRTCClientVideoTra
      */
     private void sendDirection(Direction direction) {
         if (direction != null) {
-            steeringListener.sendCommand(direction);
+            driverChatClient.sendMessage(direction.toString());
         }
     }
 
     @OnClick(R.id.audio_toggle)
     public void toggleAudio(View view){
         boolean enabled = ((ToggleButton) view).isChecked();
-        ((DriverActivity) getActivity()).setStreamAudioEnabled(enabled);
+        //todo add mute feature
     }
 
     @OnClick(R.id.mic_toggle)
     public void toggleMicrophone(View view){
         boolean enabled = ((ToggleButton) view).isChecked();
-        ((DriverActivity) getActivity()).setMicrophoneEnabled(enabled);
+        driverChatClient.setMicrophoneEnabled(enabled);
     }
 
     @Override
@@ -157,6 +158,6 @@ public class ControlFragment extends BaseFragment implements QBRTCClientVideoTra
     @Override
     public void onStop() {
         super.onStop();
-        ((DriverActivity) getActivity()).removeVideoTrackCallbacksListener(this);
+        driverChatClient.unregisterQbVideoCallbacksListener(this);
     }
 }

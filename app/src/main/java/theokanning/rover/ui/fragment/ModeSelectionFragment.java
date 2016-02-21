@@ -12,7 +12,6 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import theokanning.rover.R;
 import theokanning.rover.ui.activity.ModeSelectionInterface;
-import theokanning.rover.user.User;
 
 /**
  * Fragment where user selects remote or user mode
@@ -23,35 +22,34 @@ public class ModeSelectionFragment extends BaseFragment {
 
     @OnClick(R.id.driver)
     public void goToDriverActivity() {
-        modeSelectionInterface.logInAndStartActivity(User.DRIVER);
+        modeSelectionInterface.startDriverActivity();
     }
 
     @OnClick(R.id.robot)
     public void goToRobotActivity() {
-        modeSelectionInterface.logInAndStartActivity(User.ROBOT);
+        modeSelectionInterface.startRobotActivity();
     }
-
 
     private ModeSelectionInterface modeSelectionInterface;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_mode_selection, container, false);
-    }
-
-    @Override
-    public void onViewCreated(View view, Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
+        View view = inflater.inflate(R.layout.fragment_mode_selection, container, false);
         ButterKnife.bind(this, view);
-
+        return view;
     }
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
         initializeModeSelectionInterface();
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        ButterKnife.unbind(this);
     }
 
     private void initializeModeSelectionInterface() {
