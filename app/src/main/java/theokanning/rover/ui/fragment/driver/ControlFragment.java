@@ -25,6 +25,7 @@ import butterknife.OnTouch;
 import theokanning.rover.R;
 import theokanning.rover.RoverApplication;
 import theokanning.rover.chat.client.DriverChatClient;
+import theokanning.rover.chat.model.Message;
 import theokanning.rover.ui.activity.SteeringListener.Direction;
 import theokanning.rover.ui.fragment.BaseFragment;
 
@@ -127,7 +128,7 @@ public class ControlFragment extends BaseFragment implements QBRTCClientVideoTra
      */
     private void sendDirection(Direction direction) {
         if (direction != null) {
-            driverChatClient.sendMessage(direction.toString());
+            driverChatClient.sendMessage(new Message(Message.Tag.ROBOT, direction.toString()));
         }
     }
 

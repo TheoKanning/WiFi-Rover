@@ -11,6 +11,7 @@ import theokanning.rover.R;
 import theokanning.rover.RoverApplication;
 import theokanning.rover.chat.callback.DriverChatCallbackListener;
 import theokanning.rover.chat.client.DriverChatClient;
+import theokanning.rover.chat.model.Message;
 import theokanning.rover.ui.fragment.WaitingFragment;
 import theokanning.rover.ui.fragment.driver.ConnectFragment;
 import theokanning.rover.ui.fragment.driver.ControlFragment;
@@ -61,10 +62,6 @@ public class DriverActivity extends BaseActivity implements DriverChatCallbackLi
                 startActivity(intent);
             }
         });
-    }
-
-    private void sendChatMessage(String message) {
-        driverChatClient.sendMessage(message);
     }
 
     private void showLoggingInFragment() {
@@ -122,7 +119,7 @@ public class DriverActivity extends BaseActivity implements DriverChatCallbackLi
     }
 
     @Override
-    public void onChatMessageReceived(String message) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+    public void onChatMessageReceived(Message message) {
+        Toast.makeText(this, message.getContents(), Toast.LENGTH_SHORT).show();
     }
 }

@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.util.Log;
 
+import com.google.gson.Gson;
 import com.quickblox.chat.QBChatService;
 import com.quickblox.chat.QBPrivateChat;
 import com.quickblox.chat.QBPrivateChatManager;
@@ -36,6 +37,7 @@ import theokanning.rover.chat.callback.DriverChatCallbackListener;
 import theokanning.rover.chat.callback.RobotChatCallbackListener;
 import theokanning.rover.chat.client.DriverChatClient;
 import theokanning.rover.chat.client.RobotChatClient;
+import theokanning.rover.chat.model.Message;
 import theokanning.rover.user.User;
 
 /**
@@ -59,7 +61,10 @@ public abstract class QuickBloxChatClient implements RobotChatClient, DriverChat
     QBMessageListener<QBPrivateChat> privateChatMessageListener = new QBMessageListener<QBPrivateChat>() {
         @Override
         public void processMessage(QBPrivateChat privateChat, final QBChatMessage chatMessage) {
-            chatCallbackListener.onChatMessageReceived(chatMessage.getBody());
+            String body = chatMessage.getBody();
+            Gson gson = new Gson();
+            Message message = gson.fromJson(body, Message.class);
+            chatCallbackListener.onChatMessageReceived(message);
         }
 
         @Override
@@ -76,7 +81,6 @@ public abstract class QuickBloxChatClient implements RobotChatClient, DriverChat
                 qbrtcSession.acceptCall(new HashMap<>());
                 currentSession = qbrtcSession;
             });
-
             robotChatCallbackListener.onCallReceived();
         }
 
@@ -183,17 +187,19 @@ public abstract class QuickBloxChatClient implements RobotChatClient, DriverChat
     }
 
     @Override
-    public void sendMessage(String message) {
+    public void sendMessage(Message message) {
         if (privateChat == null) {
             startPrivateChat();
         }
         trySendingMessage(message);
     }
 
-    private void trySendingMessage(String message) {
+    private void trySendingMessage(Message message) {
+        Gson gson = new Gson();
+        String messageString = gson.toJson(message);
         try {
             QBChatMessage chatMessage = new QBChatMessage();
-            chatMessage.setBody(message);
+            chatMessage.setBody(messageString);
             privateChat.sendMessage(chatMessage);
         } catch (XMPPException | SmackException.NotConnectedException e) {
             //do nothing

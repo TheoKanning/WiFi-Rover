@@ -11,6 +11,7 @@ import theokanning.rover.R;
 import theokanning.rover.RoverApplication;
 import theokanning.rover.chat.callback.RobotChatCallbackListener;
 import theokanning.rover.chat.client.RobotChatClient;
+import theokanning.rover.chat.model.Message;
 import theokanning.rover.ui.fragment.WaitingFragment;
 import theokanning.rover.ui.fragment.robot.ConnectedFragment;
 import theokanning.rover.usb.UsbScanner;
@@ -144,7 +145,7 @@ public class RobotActivity extends BaseActivity implements UsbScanner.UsbScanner
                 .commit();
     }
 
-    private void sendChatMessageToDriver(String message) {
+    private void sendChatMessageToDriver(Message message) {
         robotChatClient.sendMessage(message);
     }
 
@@ -154,13 +155,13 @@ public class RobotActivity extends BaseActivity implements UsbScanner.UsbScanner
 
     @Override
     public void onConnect() {
-        sendChatMessageToDriver("Connected to robot");
+        sendChatMessageToDriver(new Message(Message.Tag.DISPLAY,"Connected to robot"));
         runOnUiThread(() -> showConnectedFragment());
     }
 
     @Override
     public void onDisconnect() {
-        sendChatMessageToDriver("Disconnected from robot");
+        sendChatMessageToDriver(new Message(Message.Tag.DISPLAY, "Disconnected from robot"));
     }
 
     @Override
@@ -171,7 +172,6 @@ public class RobotActivity extends BaseActivity implements UsbScanner.UsbScanner
     @Override
     public void onCallReceived() {
         Toast.makeText(RobotActivity.this, "Call received", Toast.LENGTH_SHORT).show();
-        Log.d(TAG, "Call received");
         usbScanner.startScan();
         showScanningFragment();
     }
@@ -182,8 +182,15 @@ public class RobotActivity extends BaseActivity implements UsbScanner.UsbScanner
     }
 
     @Override
-    public void onChatMessageReceived(String message) {
+    public void onChatMessageReceived(Message message) {
         Log.e(TAG, "Message received: " + message);
-        sendDirectionsToRobot(SteeringListener.Direction.valueOf(message));
+        switch (message.getTag()){
+            case ROBOT:
+                sendDirectionsToRobot(SteeringListener.Direction.valueOf(message.getContents()));
+                break;
+            case DISPLAY:
+                break;
+            default:
+        }
     }
 }
