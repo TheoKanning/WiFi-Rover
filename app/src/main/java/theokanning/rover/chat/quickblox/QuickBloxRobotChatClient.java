@@ -9,7 +9,7 @@ import theokanning.rover.user.User;
  *
  * @author Theo Kanning
  */
-public class QuickBloxRobotChatClient extends QuickBloxChatClient{
+public class QuickBloxRobotChatClient extends QuickBloxChatClient {
     @Override
     protected QBUser getUser() {
         return User.ROBOT.getQbUser();
