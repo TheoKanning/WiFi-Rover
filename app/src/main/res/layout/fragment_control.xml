@@ -81,5 +81,11 @@
             android:text="Right"
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:textColor="#fff" />
+
+        <theokanning.rover.ui.view.Dpad
+            android:layout_width="@dimen/dpad_size"
+            android:layout_height="@dimen/dpad_size"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true" />
     </RelativeLayout>
 </FrameLayout>
