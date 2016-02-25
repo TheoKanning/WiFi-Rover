@@ -32,60 +32,15 @@
             android:layout_toEndOf="@+id/audio_toggle"
             android:layout_toRightOf="@+id/audio_toggle"
             android:background="@drawable/mic_toggle_selector"
-            android:checked="true"
+            android:checked="false"
             android:textOff=""
             android:textOn="" />
 
-        <TextView
-            android:id="@+id/up"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentTop="true"
-            android:layout_centerHorizontal="true"
-            android:padding="@dimen/default_margin"
-            android:text="Up"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:textColor="#fff" />
-
-        <TextView
-            android:id="@+id/left"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
-            android:layout_centerVertical="true"
-            android:padding="@dimen/default_margin"
-            android:text="Left"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:textColor="#fff" />
-
-        <TextView
-            android:id="@+id/down"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
-            android:layout_centerHorizontal="true"
-            android:padding="@dimen/default_margin"
-            android:text="Down"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:textColor="#fff" />
-
-        <TextView
-            android:id="@+id/right"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentEnd="true"
-            android:layout_alignParentRight="true"
-            android:layout_centerVertical="true"
-            android:padding="@dimen/default_margin"
-            android:text="Right"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:textColor="#fff" />
-
         <theokanning.rover.ui.view.Dpad
+            android:id="@+id/dpad"
             android:layout_width="@dimen/dpad_size"
             android:layout_height="@dimen/dpad_size"
             android:layout_alignParentBottom="true"
-            android:layout_alignParentRight="true" />
+            android:layout_alignParentLeft="true" />
     </RelativeLayout>
 </FrameLayout>

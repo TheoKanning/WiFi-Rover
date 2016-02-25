@@ -22,7 +22,6 @@ import theokanning.rover.usb.UsbScanner;
 public class RobotActivity extends BaseActivity implements UsbScanner.UsbScannerListener, RobotChatCallbackListener {
 
     private static final String TAG = "RobotActivity";
-    private static final int ROBOT_COMMAND_MAX = 200;
 
     @Inject
     UsbScanner usbScanner;
@@ -74,37 +73,9 @@ public class RobotActivity extends BaseActivity implements UsbScanner.UsbScanner
         });
     }
 
-    /**
-     * Sends a directional command to the robot after converting it to RL values
-     *
-     * @param direction direction robot should move
-     */
-    private void sendDirectionsToRobot(SteeringListener.Direction direction) {
-        //todo change to sending percent value -100 to 100
+    private void sendDirectionsToRobot(String command) {
         if (connectedToRobot()) {
-            int left = 0;
-            int right = 0;
-            switch (direction) {
-                case UP:
-                    left = ROBOT_COMMAND_MAX;
-                    right = ROBOT_COMMAND_MAX;
-                    break;
-                case DOWN:
-                    left = -1 * ROBOT_COMMAND_MAX;
-                    right = -1 * ROBOT_COMMAND_MAX;
-                    break;
-                case LEFT:
-                    right = ROBOT_COMMAND_MAX / 2;
-                    left = -1 * ROBOT_COMMAND_MAX / 2;
-                    break;
-                case RIGHT:
-                    right = -1 * ROBOT_COMMAND_MAX / 2;
-                    left = ROBOT_COMMAND_MAX / 2;
-                    break;
-            }
-            //todo refactor start and end characters into usb message class
-            String bluetoothCommand = "(" + left + "," + right + ")";
-            usbScanner.write("(R" + right + ")(L" + left + ")");
+            usbScanner.write(command);
         } else {
             Log.d(TAG, "Can't send command, not connected to robot");
         }
@@ -186,7 +157,7 @@ public class RobotActivity extends BaseActivity implements UsbScanner.UsbScanner
         Log.e(TAG, "Message received: " + message);
         switch (message.getTag()){
             case ROBOT:
-                sendDirectionsToRobot(SteeringListener.Direction.valueOf(message.getContents()));
+                sendDirectionsToRobot(message.getContents());
                 break;
             case DISPLAY:
                 break;

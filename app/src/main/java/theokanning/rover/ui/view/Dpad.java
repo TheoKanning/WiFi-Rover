@@ -2,8 +2,8 @@ package theokanning.rover.ui.view;
 
 import android.content.Context;
 import android.graphics.Point;
+import android.os.Handler;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.RelativeLayout;
@@ -12,6 +12,7 @@ import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnTouch;
 import theokanning.rover.R;
+import theokanning.rover.ui.model.SteeringCommand;
 
 /**
  * Custom view that listens for touch events with a circle and reports them in polar coordinates
@@ -21,13 +22,30 @@ import theokanning.rover.R;
 public class Dpad extends RelativeLayout {
 
     public interface DpadListener {
-        void onDpadPressed(float radians, int magnitude);
+        void onDpadPressed(SteeringCommand command);
     }
 
     private static final String TAG = "Dpad";
 
+    private static final int COMMAND_PERIOD_MS = 100;
+
     @Bind(R.id.dpad)
     View touchableArea;
+
+    private SteeringCommand currentCommand;
+    private DpadListener listener;
+
+    private Handler handler = new Handler();
+
+    private Runnable commandSender = new Runnable() {
+        @Override
+        public void run() {
+            if (currentCommand != null && listener != null) {
+                listener.onDpadPressed(currentCommand);
+            }
+            handler.postDelayed(commandSender, COMMAND_PERIOD_MS);
+        }
+    };
 
     public Dpad(Context context) {
         super(context);
@@ -47,20 +65,36 @@ public class Dpad extends RelativeLayout {
     private void init(Context context) {
         View view = inflate(context, R.layout.widget_dpad, this);
         ButterKnife.bind(this, view);
+        handler.post(commandSender);
+    }
+
+    public void registerListener(DpadListener listener){
+        this.listener = listener;
+    }
+
+    public void unregisterListener(){
+        this.listener = null;
     }
 
     @OnTouch(R.id.dpad)
     public boolean onDpadTouched(View v, MotionEvent event) {
-        Point point = new Point((int) event.getX(), (int) event.getY());
-        calculatePress(point);
-        return false;
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_MOVE:
+            case MotionEvent.ACTION_DOWN:
+                Point point = new Point((int) event.getX(), (int) event.getY());
+                setCurrentCommand(point);
+                break;
+            case MotionEvent.ACTION_UP:
+                removeCurrentCommand();
+        }
+        return true;
     }
 
-    private void calculatePress(Point point) {
+    private void setCurrentCommand(Point point) {
         float rawMagnitude = getMagnitude(point);
         float boundedMagnitude = Math.min(rawMagnitude, 1.0f);
         float angle = getAngle(point);
-        Log.d(TAG, "Point detected with magnitude " + boundedMagnitude + " and angle " + angle);
+        currentCommand = new SteeringCommand(angle, boundedMagnitude);
     }
 
     private float getMagnitude(Point point) {
@@ -89,5 +123,9 @@ public class Dpad extends RelativeLayout {
         int x = getWidth() / 2;
         int y = getHeight() / 2;
         return new Point(x, y);
+    }
+
+    private void removeCurrentCommand() {
+        currentCommand = null;
     }
 }
