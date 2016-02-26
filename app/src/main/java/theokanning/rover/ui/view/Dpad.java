@@ -29,6 +29,8 @@ public class Dpad extends RelativeLayout {
 
     private static final int COMMAND_PERIOD_MS = 100;
 
+    private static final float MINIMUM_THROTTLE = 0.1f;
+
     @Bind(R.id.dpad)
     View touchableArea;
 
@@ -91,10 +93,11 @@ public class Dpad extends RelativeLayout {
     }
 
     private void setCurrentCommand(Point point) {
-        float rawMagnitude = getMagnitude(point);
-        float boundedMagnitude = Math.min(rawMagnitude, 1.0f);
-        float angle = getAngle(point);
-        currentCommand = new SteeringCommand(angle, boundedMagnitude);
+        float throttle = (getCenter().y - point.y)/((float)getRadius());
+        float differential = (getCenter().x - point.x)/((float)getRadius());
+        if(throttle >= MINIMUM_THROTTLE) {
+            currentCommand = new SteeringCommand(throttle, differential);
+        }
     }
 
     private float getMagnitude(Point point) {

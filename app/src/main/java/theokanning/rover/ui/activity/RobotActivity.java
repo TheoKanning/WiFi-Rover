@@ -23,11 +23,15 @@ public class RobotActivity extends BaseActivity implements UsbScanner.UsbScanner
 
     private static final String TAG = "RobotActivity";
 
+    private static final int MINIMUM_COMMAND_PERIOD_MS = 30;
+
     @Inject
     UsbScanner usbScanner;
 
     @Inject
     RobotChatClient robotChatClient;
+
+    private long lastMessageTime;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,10 +78,14 @@ public class RobotActivity extends BaseActivity implements UsbScanner.UsbScanner
     }
 
     private void sendDirectionsToRobot(String command) {
-        if (connectedToRobot()) {
-            usbScanner.write(command);
-        } else {
+        if (!connectedToRobot()) {
             Log.d(TAG, "Can't send command, not connected to robot");
+        }
+
+        long time = System.currentTimeMillis();
+        if (time - lastMessageTime > MINIMUM_COMMAND_PERIOD_MS) {
+            lastMessageTime = time;
+            usbScanner.write(command);
         }
     }
 
@@ -126,7 +134,7 @@ public class RobotActivity extends BaseActivity implements UsbScanner.UsbScanner
 
     @Override
     public void onConnect() {
-        sendChatMessageToDriver(new Message(Message.Tag.DISPLAY,"Connected to robot"));
+        sendChatMessageToDriver(new Message(Message.Tag.DISPLAY, "Connected to robot"));
         runOnUiThread(() -> showConnectedFragment());
     }
 
@@ -155,12 +163,14 @@ public class RobotActivity extends BaseActivity implements UsbScanner.UsbScanner
     @Override
     public void onChatMessageReceived(Message message) {
         Log.e(TAG, "Message received: " + message);
-        switch (message.getTag()){
+        switch (message.getTag()) {
             case ROBOT:
                 sendDirectionsToRobot(message.getContents());
                 break;
             case DISPLAY:
                 break;
+            case TEST:
+                Log.e(TAG, message.getContents());
             default:
         }
     }

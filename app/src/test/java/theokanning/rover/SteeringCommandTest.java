@@ -17,24 +17,18 @@ public class SteeringCommandTest {
         assertEquals(0, stationary.getLeftMotorCommand(), 1);
     }
 
-    @Test
-    public void rightConversionIsCorrect(){
-        SteeringCommand right = new SteeringCommand(0, 1);
-        assertEquals(-MAXIMUM, right.getRightMotorCommand(), 1);
-        assertEquals(MAXIMUM, right.getLeftMotorCommand(), 1);
-    }
     
     @Test
     public void forwardConversionIsCorrect(){
-        SteeringCommand forward = new SteeringCommand((float)Math.PI/2, 1);
+        SteeringCommand forward = new SteeringCommand(1, 0);
         assertEquals(MAXIMUM, forward.getRightMotorCommand(), 1);
         assertEquals(MAXIMUM, forward.getLeftMotorCommand(), 1);
     }
 
     @Test
     public void forwardRightConversionIsCorrect(){
-        SteeringCommand forwardRight = new SteeringCommand((float)Math.PI/4, 1);
-        assertEquals(0, forwardRight.getRightMotorCommand(), 1);
-        assertEquals(MAXIMUM*Math.sin(Math.PI/4), forwardRight.getLeftMotorCommand(), 1);
+        SteeringCommand forwardRight = new SteeringCommand(1, .5f);
+        assertEquals(MAXIMUM*1.5, forwardRight.getRightMotorCommand(), 1);
+        assertEquals(MAXIMUM*.5, forwardRight.getLeftMotorCommand(), 1);
     }
 }

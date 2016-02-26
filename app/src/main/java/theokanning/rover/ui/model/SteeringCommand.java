@@ -1,32 +1,32 @@
 package theokanning.rover.ui.model;
 
 /**
- * Steering command comprised of a direction and a magnitude
+ * Steering command comprised of a throttle and a differential
  *
  * @author Theo Kanning
  */
 public class SteeringCommand {
 
-    public static final int ROBOT_COMMAND_MAX = 255;
+    public static final int ROBOT_COMMAND_MAX = 175;
     private static final String ROBOT_START_CHARACTER = "(";
     private static final String  ROBOT_STOP_CHARACTER = ")";
     private static final String  ROBOT_RIGHT_CHARACTER = "R";
     private static final String  ROBOT_LEFT_CHARACTER = "L";
 
-    private float direction;
-    private float magnitude;
+    private float throttle;
+    private float differential;
 
-    public SteeringCommand(float direction, float magnitude) {
-        this.direction = direction;
-        this.magnitude = magnitude;
+    public SteeringCommand(float throttle, float differential) {
+        this.throttle = throttle;
+        this.differential = differential;
     }
 
-    public float getDirection() {
-        return direction;
+    public float getThrottle() {
+        return throttle;
     }
 
-    public float getMagnitude() {
-        return magnitude;
+    public float getDifferential() {
+        return differential;
     }
 
     /**
@@ -47,10 +47,10 @@ public class SteeringCommand {
     }
 
     public int getRightMotorCommand() {
-        return (int) ( ROBOT_COMMAND_MAX * magnitude * ( Math.sin(direction) - Math.cos(direction)));
+        return (int) ( ROBOT_COMMAND_MAX * (throttle + differential));
     }
 
     public int getLeftMotorCommand() {
-        return (int) ( ROBOT_COMMAND_MAX * magnitude * ( Math.sin(direction) + Math.cos(direction)));
+        return (int) ( ROBOT_COMMAND_MAX * (throttle - differential));
     }
 }
