@@ -95,7 +95,7 @@ public class Dpad extends RelativeLayout {
     private void setCurrentCommand(Point point) {
         float throttle = (getCenter().y - point.y)/((float)getRadius());
         float differential = (getCenter().x - point.x)/((float)getRadius());
-        if(throttle >= MINIMUM_THROTTLE) {
+        if(Math.abs(throttle) >= MINIMUM_THROTTLE) {
             currentCommand = new SteeringCommand(throttle, differential);
         }
     }
