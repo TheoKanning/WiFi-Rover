@@ -114,16 +114,22 @@ public class UsbScanner {
         if (serialPort != null) {
             serialPort.close();
         }
-        context.unregisterReceiver(usbReceiver);
+        tryUnregisteringReceiver();
     }
 
-    private UsbSerialInterface.UsbReadCallback callback = new UsbSerialInterface.UsbReadCallback() {
-        @Override
-        public void onReceivedData(byte[] bytes) {
-            String data = tryEncodingBytesAsString(bytes);
-            sendMessageToListener(data);
-            Log.e(TAG, "Message received: " + data);
+    private void tryUnregisteringReceiver() {
+        try {
+            context.unregisterReceiver(usbReceiver);
+        } catch (IllegalArgumentException e){
+            //receiver is unregistered
         }
+    }
+
+
+    private UsbSerialInterface.UsbReadCallback callback = bytes -> {
+        String data = tryEncodingBytesAsString(bytes);
+        sendMessageToListener(data);
+        Log.e(TAG, "Message received: " + data);
     };
 
     private String tryEncodingBytesAsString(byte[] bytes) {

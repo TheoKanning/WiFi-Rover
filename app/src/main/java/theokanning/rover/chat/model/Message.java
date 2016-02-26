@@ -8,7 +8,8 @@ package theokanning.rover.chat.model;
 public final class Message {
     public enum Tag{
         DISPLAY,
-        ROBOT;
+        ROBOT,
+        TEST
     }
 
     private Tag tag;
