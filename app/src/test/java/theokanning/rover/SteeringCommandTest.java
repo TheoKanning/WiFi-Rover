@@ -28,7 +28,14 @@ public class SteeringCommandTest {
     @Test
     public void forwardRightConversionIsCorrect(){
         SteeringCommand forwardRight = new SteeringCommand(1, .5f);
-        assertEquals(MAXIMUM*1.5, forwardRight.getRightMotorCommand(), 1);
-        assertEquals(MAXIMUM*.5, forwardRight.getLeftMotorCommand(), 1);
+        assertEquals(MAXIMUM*0.5, forwardRight.getRightMotorCommand(), 1);
+        assertEquals(MAXIMUM*1.5, forwardRight.getLeftMotorCommand(), 1);
+    }
+
+    @Test
+    public void backRightConversionIsCorrect(){
+        SteeringCommand forwardRight = new SteeringCommand(-1, .5f);
+        assertEquals(-MAXIMUM*1.5, forwardRight.getRightMotorCommand(), 1);
+        assertEquals(-MAXIMUM*0.5, forwardRight.getLeftMotorCommand(), 1);
     }
 }

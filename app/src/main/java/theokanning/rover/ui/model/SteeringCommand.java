@@ -47,10 +47,10 @@ public class SteeringCommand {
     }
 
     public int getRightMotorCommand() {
-        return (int) ( ROBOT_COMMAND_MAX * (throttle + differential));
+        return (int) ( ROBOT_COMMAND_MAX * (throttle - differential));
     }
 
     public int getLeftMotorCommand() {
-        return (int) ( ROBOT_COMMAND_MAX * (throttle - differential));
+        return (int) ( ROBOT_COMMAND_MAX * (throttle + differential));
     }
 }
