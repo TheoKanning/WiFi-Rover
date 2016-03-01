@@ -13,6 +13,7 @@ import theokanning.rover.chat.callback.RobotChatCallbackListener;
 import theokanning.rover.chat.client.RobotChatClient;
 import theokanning.rover.chat.model.Message;
 import theokanning.rover.ui.fragment.WaitingFragment;
+import theokanning.rover.ui.fragment.robot.ChatMessageDebugListener;
 import theokanning.rover.ui.fragment.robot.ConnectedFragment;
 import theokanning.rover.usb.UsbScanner;
 
@@ -32,6 +33,8 @@ public class RobotActivity extends BaseActivity implements UsbScanner.UsbScanner
     RobotChatClient robotChatClient;
 
     private long lastMessageTime;
+
+    private ChatMessageDebugListener chatMessageDebugListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -132,6 +135,20 @@ public class RobotActivity extends BaseActivity implements UsbScanner.UsbScanner
         return usbScanner.isConnected();
     }
 
+    public void registerChatMessageDebugListener(ChatMessageDebugListener listener){
+        chatMessageDebugListener = listener;
+    }
+
+    public void unregisterChatMessageDebugListener(){
+        chatMessageDebugListener = null;
+    }
+
+    private void sendMessageToDebugListener(Message message){
+        if(chatMessageDebugListener != null){
+            chatMessageDebugListener.showMessage(message);
+        }
+    }
+
     @Override
     public void onConnect() {
         sendChatMessageToDriver(new Message(Message.Tag.DISPLAY, "Connected to robot"));
@@ -163,6 +180,7 @@ public class RobotActivity extends BaseActivity implements UsbScanner.UsbScanner
     @Override
     public void onChatMessageReceived(Message message) {
         Log.e(TAG, "Message received: " + message);
+        sendMessageToDebugListener(message);
         switch (message.getTag()) {
             case ROBOT:
                 sendDirectionsToRobot(message.getContents());
