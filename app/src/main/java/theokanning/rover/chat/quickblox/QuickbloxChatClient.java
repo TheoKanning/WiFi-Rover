@@ -40,7 +40,7 @@ import theokanning.rover.chat.client.RobotChatClient;
 import theokanning.rover.chat.model.Message;
 
 /**
- * Quickblox implementation of {@link RobotChatClient} and {@link RobotChatClient}
+ * Quickblox implementation of {@link RobotChatClient} and {@link DriverChatClient}
  *
  * @author Theo Kanning
  */
