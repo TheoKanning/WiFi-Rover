@@ -11,7 +11,7 @@ import theokanning.rover.ui.fragment.driver.ControlFragment;
 
 @Singleton
 @Component(modules = {
-        UsbModule.class,
+        RobotConnectionModule.class,
         ChatModule.class})
 public interface RoverComponent {
     void inject(Application application);

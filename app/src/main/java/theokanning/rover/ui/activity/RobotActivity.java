@@ -9,14 +9,14 @@ import javax.inject.Inject;
 
 import theokanning.rover.R;
 import theokanning.rover.RoverApplication;
-import theokanning.rover.chat.listener.RobotChatListener;
 import theokanning.rover.chat.client.RobotChatClient;
+import theokanning.rover.chat.listener.RobotChatListener;
 import theokanning.rover.chat.model.Message;
+import theokanning.rover.robot.RobotConnection;
 import theokanning.rover.robot.RobotConnectionListener;
 import theokanning.rover.ui.fragment.WaitingFragment;
 import theokanning.rover.ui.fragment.robot.ChatMessageDebugListener;
 import theokanning.rover.ui.fragment.robot.ConnectedFragment;
-import theokanning.rover.usb.UsbScanner;
 
 /**
  * Controls all call activity for the robot. Only receives calls.
@@ -25,15 +25,11 @@ public class RobotActivity extends BaseActivity implements RobotConnectionListen
 
     private static final String TAG = "RobotActivity";
 
-    private static final int MINIMUM_COMMAND_PERIOD_MS = 30;
-
-    @Inject
-    UsbScanner usbScanner;
-
     @Inject
     RobotChatClient robotChatClient;
 
-    private long lastMessageTime;
+    @Inject
+    RobotConnection robotConnection;
 
     private ChatMessageDebugListener chatMessageDebugListener;
 
@@ -55,8 +51,7 @@ public class RobotActivity extends BaseActivity implements RobotConnectionListen
     @Override
     protected void onStop() {
         super.onStop();
-        usbScanner.close();
-        usbScanner.unregisterListener();
+        robotConnection.disconnect();
         robotChatClient.unregisterRobotChatCallbackListener();
         robotChatClient.unregisterChatCallbackListener();
     }
@@ -81,15 +76,7 @@ public class RobotActivity extends BaseActivity implements RobotConnectionListen
     }
 
     private void sendDirectionsToRobot(String command) {
-        if (!connectedToRobot()) {
-            Log.d(TAG, "Can't send command, not connected to robot");
-        }
-
-        long time = System.currentTimeMillis();
-        if (time - lastMessageTime > MINIMUM_COMMAND_PERIOD_MS) {
-            lastMessageTime = time;
-            usbScanner.write(command);
-        }
+        robotConnection.sendMessage(command);
     }
 
     /**
@@ -131,10 +118,6 @@ public class RobotActivity extends BaseActivity implements RobotConnectionListen
         robotChatClient.sendMessage(message);
     }
 
-    private boolean connectedToRobot() {
-        return usbScanner.isConnected();
-    }
-
     public void registerChatMessageDebugListener(ChatMessageDebugListener listener){
         chatMessageDebugListener = listener;
     }
@@ -152,7 +135,7 @@ public class RobotActivity extends BaseActivity implements RobotConnectionListen
     @Override
     public void onConnect() {
         sendChatMessageToDriver(new Message(Message.Tag.DISPLAY, "Connected to robot"));
-        runOnUiThread(() -> showConnectedFragment());
+        runOnUiThread(this::showConnectedFragment);
     }
 
     @Override
@@ -168,7 +151,7 @@ public class RobotActivity extends BaseActivity implements RobotConnectionListen
     @Override
     public void onCallReceived() {
         Toast.makeText(RobotActivity.this, "Call received", Toast.LENGTH_SHORT).show();
-        usbScanner.connect(this);
+        robotConnection.connect(this);
         showScanningFragment();
     }
 

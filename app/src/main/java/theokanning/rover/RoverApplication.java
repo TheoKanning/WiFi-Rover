@@ -7,8 +7,8 @@ import com.quickblox.core.QBSettings;
 
 import theokanning.rover.dagger.ChatModule;
 import theokanning.rover.dagger.DaggerRoverComponent;
+import theokanning.rover.dagger.RobotConnectionModule;
 import theokanning.rover.dagger.RoverComponent;
-import theokanning.rover.dagger.UsbModule;
 
 public class RoverApplication extends Application {
 
@@ -19,7 +19,7 @@ public class RoverApplication extends Application {
         super.onCreate();
 
         component = DaggerRoverComponent.builder()
-                .usbModule(new UsbModule(this))
+                .robotConnectionModule(new RobotConnectionModule(this))
                 .chatModule(new ChatModule(this))
                 .build();
         component.inject(this);

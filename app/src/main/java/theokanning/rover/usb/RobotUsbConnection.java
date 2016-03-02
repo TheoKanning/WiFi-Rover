@@ -18,6 +18,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Iterator;
 
+import theokanning.rover.robot.RobotConnection;
 import theokanning.rover.robot.RobotConnectionListener;
 
 /**
@@ -25,10 +26,10 @@ import theokanning.rover.robot.RobotConnectionListener;
  *
  * @author Theo Kanning
  */
-public class UsbScanner {
+public class RobotUsbConnection implements RobotConnection{
 
-    private static final String TAG = "UsbScanner";
-    private static final String ACTION_USB_PERMISSION = "com.blecentral.USB_PERMISSION"; //todo change text
+    private static final String TAG = "RobotUsbConnection";
+    private static final String ACTION_USB_PERMISSION = "theokanning.rover.USB_PERMISSION";
 
     private Context context;
 
@@ -36,27 +37,38 @@ public class UsbScanner {
 
     private RobotConnectionListener listener;
 
-    public UsbScanner(Context context) {
+    public RobotUsbConnection(Context context) {
         this.context = context;
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_USB_PERMISSION);
         context.registerReceiver(usbReceiver, filter);
     }
 
-    public void registerListener(RobotConnectionListener listener) {
-        this.listener = listener;
-    }
-
-    public void unregisterListener() {
-        this.listener = null;
-    }
-
+    @Override
     public void connect(RobotConnectionListener listener){
         this.listener = listener;
         startScan();
     }
 
-    public void startScan() {
+    @Override
+    public void disconnect(){
+        this.listener.onDisconnect();
+        this.listener = null;
+        tryUnregisteringReceiver();
+        closeSerialPort();
+    }
+
+    @Override
+    public void sendMessage(String message) {
+        if (serialPort != null) {
+            serialPort.write(message.getBytes());
+        }
+    }
+
+    private void startScan() {
+
+        closeSerialPort();
+
         UsbManager manager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
         // Get the list of attached devices
         HashMap<String, UsbDevice> devices = manager.getDeviceList();
@@ -89,7 +101,7 @@ public class UsbScanner {
         return serialPort != null;
     }
 
-    public void configureSerialPort() {
+    private void configureSerialPort() {
         if (serialPort.open()) {
             serialPort.setBaudRate(115200);
             serialPort.setDataBits(UsbSerialInterface.DATA_BITS_8);
@@ -103,17 +115,10 @@ public class UsbScanner {
         }
     }
 
-    public void write(String message) {
-        if (serialPort != null) {
-            serialPort.write(message.getBytes());
-        }
-    }
-
-    public void close() {
+    private void closeSerialPort() {
         if (serialPort != null) {
             serialPort.close();
         }
-        tryUnregisteringReceiver();
     }
 
     private void tryUnregisteringReceiver() {
