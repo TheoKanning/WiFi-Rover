@@ -1,6 +1,6 @@
 package theokanning.rover.chat.client;
 
-import theokanning.rover.chat.callback.RobotChatCallbackListener;
+import theokanning.rover.chat.listener.RobotChatListener;
 
 /**
  * All common chat methods plus those used by the robot
@@ -8,6 +8,6 @@ import theokanning.rover.chat.callback.RobotChatCallbackListener;
  * @author Theo Kanning
  */
 public interface RobotChatClient extends ChatClient {
-    void registerRobotChatCallbackListener(RobotChatCallbackListener listener);
+    void registerRobotChatCallbackListener(RobotChatListener listener);
     void unregisterRobotChatCallbackListener();
 }

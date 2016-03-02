@@ -32,9 +32,9 @@ import java.util.Map;
 
 import rx.Observable;
 import rx.Subscriber;
-import theokanning.rover.chat.callback.ChatCallbackListener;
-import theokanning.rover.chat.callback.DriverChatCallbackListener;
-import theokanning.rover.chat.callback.RobotChatCallbackListener;
+import theokanning.rover.chat.listener.ChatListener;
+import theokanning.rover.chat.listener.DriverChatListener;
+import theokanning.rover.chat.listener.RobotChatListener;
 import theokanning.rover.chat.client.DriverChatClient;
 import theokanning.rover.chat.client.RobotChatClient;
 import theokanning.rover.chat.model.Message;
@@ -54,9 +54,9 @@ public abstract class QuickBloxChatClient implements RobotChatClient, DriverChat
     private QBPrivateChat privateChat;
     private QBRTCSession currentSession;
 
-    private ChatCallbackListener chatCallbackListener;
-    private RobotChatCallbackListener robotChatCallbackListener;
-    private DriverChatCallbackListener driverChatCallbackListener;
+    private ChatListener chatListener;
+    private RobotChatListener robotChatCallbackListener;
+    private DriverChatListener driverChatCallbackListener;
 
     QBMessageListener<QBPrivateChat> privateChatMessageListener = new QBMessageListener<QBPrivateChat>() {
         @Override
@@ -64,7 +64,7 @@ public abstract class QuickBloxChatClient implements RobotChatClient, DriverChat
             String body = chatMessage.getBody();
             Gson gson = new Gson();
             Message message = gson.fromJson(body, Message.class);
-            chatCallbackListener.onChatMessageReceived(message);
+            chatListener.onChatMessageReceived(message);
         }
 
         @Override
@@ -101,7 +101,7 @@ public abstract class QuickBloxChatClient implements RobotChatClient, DriverChat
 
         @Override
         public void onReceiveHangUpFromUser(QBRTCSession qbrtcSession, Integer integer) {
-            chatCallbackListener.onSessionEnded();
+            chatListener.onSessionEnded();
         }
 
         @Override
@@ -235,17 +235,17 @@ public abstract class QuickBloxChatClient implements RobotChatClient, DriverChat
     }
 
     @Override
-    public void registerChatCallbackListener(ChatCallbackListener chatCallbackListener) {
-        this.chatCallbackListener = chatCallbackListener;
+    public void registerChatCallbackListener(ChatListener chatListener) {
+        this.chatListener = chatListener;
     }
 
     @Override
     public void unregisterChatCallbackListener() {
-        chatCallbackListener = null;
+        chatListener = null;
     }
 
     @Override
-    public void registerRobotChatCallbackListener(RobotChatCallbackListener listener) {
+    public void registerRobotChatCallbackListener(RobotChatListener listener) {
         this.robotChatCallbackListener = listener;
     }
 
@@ -255,7 +255,7 @@ public abstract class QuickBloxChatClient implements RobotChatClient, DriverChat
     }
 
     @Override
-    public void registerDriverChatCallbackListener(DriverChatCallbackListener listener) {
+    public void registerDriverChatCallbackListener(DriverChatListener listener) {
         this.driverChatCallbackListener = listener;
     }
 

@@ -1,4 +1,4 @@
-package theokanning.rover.chat.callback;
+package theokanning.rover.chat.listener;
 import theokanning.rover.chat.client.DriverChatClient;
 
 /**
@@ -6,7 +6,7 @@ import theokanning.rover.chat.client.DriverChatClient;
  *
  * @author Theo Kanning
  */
-public interface DriverChatCallbackListener extends ChatCallbackListener{
+public interface DriverChatListener extends ChatListener {
     void onCallAnswered(); //todo create answerable class?
     void onCallNotAnswered();
 }

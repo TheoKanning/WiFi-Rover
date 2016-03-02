@@ -18,20 +18,14 @@ import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Iterator;
 
+import theokanning.rover.robot.RobotConnectionListener;
+
 /**
  * Handles scanning and connecting to a usb device
  *
  * @author Theo Kanning
  */
 public class UsbScanner {
-
-    public interface UsbScannerListener {
-        void onConnect();
-
-        void onDisconnect();
-
-        void onMessageReceived(String message);
-    }
 
     private static final String TAG = "UsbScanner";
     private static final String ACTION_USB_PERMISSION = "com.blecentral.USB_PERMISSION"; //todo change text
@@ -40,7 +34,7 @@ public class UsbScanner {
 
     private UsbSerialDevice serialPort;
 
-    private UsbScannerListener listener;
+    private RobotConnectionListener listener;
 
     public UsbScanner(Context context) {
         this.context = context;
@@ -49,12 +43,17 @@ public class UsbScanner {
         context.registerReceiver(usbReceiver, filter);
     }
 
-    public void registerListener(UsbScannerListener listener) {
+    public void registerListener(RobotConnectionListener listener) {
         this.listener = listener;
     }
 
     public void unregisterListener() {
         this.listener = null;
+    }
+
+    public void connect(RobotConnectionListener listener){
+        this.listener = listener;
+        startScan();
     }
 
     public void startScan() {

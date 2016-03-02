@@ -9,7 +9,7 @@ import javax.inject.Inject;
 
 import theokanning.rover.R;
 import theokanning.rover.RoverApplication;
-import theokanning.rover.chat.callback.DriverChatCallbackListener;
+import theokanning.rover.chat.listener.DriverChatListener;
 import theokanning.rover.chat.client.DriverChatClient;
 import theokanning.rover.chat.model.Message;
 import theokanning.rover.ui.fragment.WaitingFragment;
@@ -20,7 +20,7 @@ import theokanning.rover.ui.fragment.driver.ControlFragment;
  * Activity where user controls remote device and watches video stream. Starts by showing
  * instructions to connect to remote device, then connects and shows video stream.
  */
-public class DriverActivity extends BaseActivity implements DriverChatCallbackListener {
+public class DriverActivity extends BaseActivity implements DriverChatListener {
     private static final String TAG = "DriverActivity";
 
     //todo understand fragment back stack

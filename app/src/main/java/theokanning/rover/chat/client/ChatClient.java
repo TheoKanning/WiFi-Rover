@@ -3,7 +3,7 @@ package theokanning.rover.chat.client;
 import android.content.Context;
 
 import rx.Observable;
-import theokanning.rover.chat.callback.ChatCallbackListener;
+import theokanning.rover.chat.listener.ChatListener;
 import theokanning.rover.chat.model.Message;
 
 /**
@@ -12,7 +12,7 @@ import theokanning.rover.chat.model.Message;
  * @author Theo Kanning
  */
 public interface ChatClient {
-    void registerChatCallbackListener(ChatCallbackListener listener);
+    void registerChatCallbackListener(ChatListener listener);
     void unregisterChatCallbackListener();
     Observable<Boolean> login(Context context);
     void sendMessage(Message message);

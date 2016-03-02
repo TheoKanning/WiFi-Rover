@@ -9,9 +9,10 @@ import javax.inject.Inject;
 
 import theokanning.rover.R;
 import theokanning.rover.RoverApplication;
-import theokanning.rover.chat.callback.RobotChatCallbackListener;
+import theokanning.rover.chat.listener.RobotChatListener;
 import theokanning.rover.chat.client.RobotChatClient;
 import theokanning.rover.chat.model.Message;
+import theokanning.rover.robot.RobotConnectionListener;
 import theokanning.rover.ui.fragment.WaitingFragment;
 import theokanning.rover.ui.fragment.robot.ChatMessageDebugListener;
 import theokanning.rover.ui.fragment.robot.ConnectedFragment;
@@ -20,7 +21,7 @@ import theokanning.rover.usb.UsbScanner;
 /**
  * Controls all call activity for the robot. Only receives calls.
  */
-public class RobotActivity extends BaseActivity implements UsbScanner.UsbScannerListener, RobotChatCallbackListener {
+public class RobotActivity extends BaseActivity implements RobotConnectionListener, RobotChatListener {
 
     private static final String TAG = "RobotActivity";
 
@@ -70,7 +71,6 @@ public class RobotActivity extends BaseActivity implements UsbScanner.UsbScanner
         showLoggingInFragment();
         robotChatClient.login(this).subscribe((success) -> {
             if (success) {
-                usbScanner.registerListener(RobotActivity.this);
                 showWaitingFragment();
             } else {
                 Intent intent = new Intent(RobotActivity.this, ModeSelectionActivity.class);
@@ -168,7 +168,7 @@ public class RobotActivity extends BaseActivity implements UsbScanner.UsbScanner
     @Override
     public void onCallReceived() {
         Toast.makeText(RobotActivity.this, "Call received", Toast.LENGTH_SHORT).show();
-        usbScanner.startScan();
+        usbScanner.connect(this);
         showScanningFragment();
     }
 
