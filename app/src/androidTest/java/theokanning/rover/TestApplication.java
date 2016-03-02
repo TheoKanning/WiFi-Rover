@@ -1,7 +1,7 @@
 package theokanning.rover;
 
 import theokanning.rover.dagger.RoverComponent;
-import theokanning.rover.dagger.UsbModule;
+import theokanning.rover.dagger.RobotConnectionModule;
 
 /**
  * Test application that enables injecting mock dependencies if desired
@@ -21,7 +21,7 @@ public class TestApplication extends RoverApplication {
     private void buildTestComponent(boolean mock){
         testComponent = DaggerTestComponent.builder()
                 .mockChatModule(new MockChatModule(this, mock))
-                .usbModule(new UsbModule(this))
+                .usbModule(new RobotConnectionModule(this))
                 .build();
     }
 

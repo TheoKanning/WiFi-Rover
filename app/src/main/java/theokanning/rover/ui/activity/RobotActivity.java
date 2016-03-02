@@ -2,6 +2,7 @@ package theokanning.rover.ui.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -9,32 +10,35 @@ import javax.inject.Inject;
 
 import theokanning.rover.R;
 import theokanning.rover.RoverApplication;
-import theokanning.rover.chat.callback.RobotChatCallbackListener;
 import theokanning.rover.chat.client.RobotChatClient;
+import theokanning.rover.chat.listener.RobotChatListener;
 import theokanning.rover.chat.model.Message;
+import theokanning.rover.robot.RobotConnection;
+import theokanning.rover.robot.RobotConnectionListener;
 import theokanning.rover.ui.fragment.WaitingFragment;
 import theokanning.rover.ui.fragment.robot.ChatMessageDebugListener;
 import theokanning.rover.ui.fragment.robot.ConnectedFragment;
-import theokanning.rover.usb.UsbScanner;
 
 /**
  * Controls all call activity for the robot. Only receives calls.
  */
-public class RobotActivity extends BaseActivity implements UsbScanner.UsbScannerListener, RobotChatCallbackListener {
+public class RobotActivity extends BaseActivity implements RobotConnectionListener, RobotChatListener {
 
     private static final String TAG = "RobotActivity";
 
-    private static final int MINIMUM_COMMAND_PERIOD_MS = 30;
-
-    @Inject
-    UsbScanner usbScanner;
+    private static final int MESSAGE_QUEUE_PERIOD = 80;
 
     @Inject
     RobotChatClient robotChatClient;
 
-    private long lastMessageTime;
+    @Inject
+    RobotConnection robotConnection;
+
+    private final Object lock = new Object();
 
     private ChatMessageDebugListener chatMessageDebugListener;
+
+    private Handler messageQueueHandler = new Handler();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,8 +58,7 @@ public class RobotActivity extends BaseActivity implements UsbScanner.UsbScanner
     @Override
     protected void onStop() {
         super.onStop();
-        usbScanner.close();
-        usbScanner.unregisterListener();
+        robotConnection.disconnect();
         robotChatClient.unregisterRobotChatCallbackListener();
         robotChatClient.unregisterChatCallbackListener();
     }
@@ -67,11 +70,10 @@ public class RobotActivity extends BaseActivity implements UsbScanner.UsbScanner
     }
 
     private void loginToChatService() {
-        showLoggingInFragment();
+        showWaitingFragment("Logging in to chat service...");
         robotChatClient.login(this).subscribe((success) -> {
             if (success) {
-                usbScanner.registerListener(RobotActivity.this);
-                showWaitingFragment();
+                showWaitingFragment("Waiting for connection...");
             } else {
                 Intent intent = new Intent(RobotActivity.this, ModeSelectionActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -81,38 +83,11 @@ public class RobotActivity extends BaseActivity implements UsbScanner.UsbScanner
     }
 
     private void sendDirectionsToRobot(String command) {
-        if (!connectedToRobot()) {
-            Log.d(TAG, "Can't send command, not connected to robot");
-        }
-
-        long time = System.currentTimeMillis();
-        if (time - lastMessageTime > MINIMUM_COMMAND_PERIOD_MS) {
-            lastMessageTime = time;
-            usbScanner.write(command);
-        }
+        robotConnection.sendMessage(command);
     }
 
-    /**
-     * Shows waiting screen when logging in to chat service
-     */
-    private void showLoggingInFragment() {
-        WaitingFragment fragment = WaitingFragment.newInstance("Logging in to chat service...");
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.fragment_container, fragment)
-                .commit();
-    }
-
-    private void showWaitingFragment() {
-        WaitingFragment fragment = WaitingFragment.newInstance("Waiting for connection...");
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.fragment_container, fragment)
-                .commit();
-    }
-
-    private void showScanningFragment() {
-        WaitingFragment fragment = WaitingFragment.newInstance("Connecting to robot...");
+    private void showWaitingFragment(String message) {
+        WaitingFragment fragment = WaitingFragment.newInstance(message);
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.fragment_container, fragment)
@@ -128,23 +103,28 @@ public class RobotActivity extends BaseActivity implements UsbScanner.UsbScanner
     }
 
     private void sendChatMessageToDriver(Message message) {
-        robotChatClient.sendMessage(message);
+        messageQueueHandler.post(() -> {
+            robotChatClient.sendMessage(message);
+            synchronized (lock) {
+                try {
+                    lock.wait(MESSAGE_QUEUE_PERIOD);
+                } catch (InterruptedException e) {
+                    //do nothing
+                }
+            }
+        });
     }
 
-    private boolean connectedToRobot() {
-        return usbScanner.isConnected();
-    }
-
-    public void registerChatMessageDebugListener(ChatMessageDebugListener listener){
+    public void registerChatMessageDebugListener(ChatMessageDebugListener listener) {
         chatMessageDebugListener = listener;
     }
 
-    public void unregisterChatMessageDebugListener(){
+    public void unregisterChatMessageDebugListener() {
         chatMessageDebugListener = null;
     }
 
-    private void sendMessageToDebugListener(Message message){
-        if(chatMessageDebugListener != null){
+    private void sendMessageToDebugListener(Message message) {
+        if (chatMessageDebugListener != null) {
             chatMessageDebugListener.showMessage(message);
         }
     }
@@ -152,7 +132,7 @@ public class RobotActivity extends BaseActivity implements UsbScanner.UsbScanner
     @Override
     public void onConnect() {
         sendChatMessageToDriver(new Message(Message.Tag.DISPLAY, "Connected to robot"));
-        runOnUiThread(() -> showConnectedFragment());
+        runOnUiThread(this::showConnectedFragment);
     }
 
     @Override
@@ -168,13 +148,13 @@ public class RobotActivity extends BaseActivity implements UsbScanner.UsbScanner
     @Override
     public void onCallReceived() {
         Toast.makeText(RobotActivity.this, "Call received", Toast.LENGTH_SHORT).show();
-        usbScanner.startScan();
-        showScanningFragment();
+        robotConnection.connect(this);
+        showWaitingFragment("Connecting to robot...");
     }
 
     @Override
     public void onSessionEnded() {
-        showWaitingFragment();
+        showWaitingFragment("Waiting for connection...");
     }
 
     @Override

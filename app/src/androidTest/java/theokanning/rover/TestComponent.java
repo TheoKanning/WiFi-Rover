@@ -6,7 +6,7 @@ import dagger.Component;
 import theokanning.rover.activity.DriverActivityTest;
 import theokanning.rover.chat.QuickBloxDriverChatClientTest;
 import theokanning.rover.dagger.RoverComponent;
-import theokanning.rover.dagger.UsbModule;
+import theokanning.rover.dagger.RobotConnectionModule;
 
 /**
  * Component for injecting modules into test classes
@@ -14,7 +14,7 @@ import theokanning.rover.dagger.UsbModule;
  * @author Theo Kanning
  */
 @Singleton
-@Component(modules = {MockChatModule.class, UsbModule.class})
+@Component(modules = {MockChatModule.class, RobotConnectionModule.class})
 public interface TestComponent extends RoverComponent {
     void inject(TestApplication testApplication);
     void inject(QuickBloxDriverChatClientTest quickBloxDriverChatClientTest);
