@@ -7,7 +7,7 @@ import javax.inject.Singleton;
 import dagger.Module;
 import dagger.Provides;
 import theokanning.rover.robot.RobotConnection;
-import theokanning.rover.usb.RobotUsbConnection;
+import theokanning.rover.robot.usb.RobotUsbConnection;
 
 @Module
 public class RobotConnectionModule {

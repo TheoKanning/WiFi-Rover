@@ -1,4 +1,4 @@
-package theokanning.rover.bluetooth;
+package theokanning.rover.robot.bluetooth;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;

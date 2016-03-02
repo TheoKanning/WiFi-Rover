@@ -1,4 +1,4 @@
-package theokanning.rover.usb;
+package theokanning.rover.robot.usb;
 
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;

@@ -2,6 +2,7 @@ package theokanning.rover.ui.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -25,13 +26,19 @@ public class RobotActivity extends BaseActivity implements RobotConnectionListen
 
     private static final String TAG = "RobotActivity";
 
+    private static final int MESSAGE_QUEUE_PERIOD = 80;
+
     @Inject
     RobotChatClient robotChatClient;
 
     @Inject
     RobotConnection robotConnection;
 
+    private final Object lock = new Object();
+
     private ChatMessageDebugListener chatMessageDebugListener;
+
+    private Handler messageQueueHandler = new Handler();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,10 +70,10 @@ public class RobotActivity extends BaseActivity implements RobotConnectionListen
     }
 
     private void loginToChatService() {
-        showLoggingInFragment();
+        showWaitingFragment("Logging in to chat service...");
         robotChatClient.login(this).subscribe((success) -> {
             if (success) {
-                showWaitingFragment();
+                showWaitingFragment("Waiting for connection...");
             } else {
                 Intent intent = new Intent(RobotActivity.this, ModeSelectionActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -79,27 +86,8 @@ public class RobotActivity extends BaseActivity implements RobotConnectionListen
         robotConnection.sendMessage(command);
     }
 
-    /**
-     * Shows waiting screen when logging in to chat service
-     */
-    private void showLoggingInFragment() {
-        WaitingFragment fragment = WaitingFragment.newInstance("Logging in to chat service...");
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.fragment_container, fragment)
-                .commit();
-    }
-
-    private void showWaitingFragment() {
-        WaitingFragment fragment = WaitingFragment.newInstance("Waiting for connection...");
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.fragment_container, fragment)
-                .commit();
-    }
-
-    private void showScanningFragment() {
-        WaitingFragment fragment = WaitingFragment.newInstance("Connecting to robot...");
+    private void showWaitingFragment(String message) {
+        WaitingFragment fragment = WaitingFragment.newInstance(message);
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.fragment_container, fragment)
@@ -115,19 +103,28 @@ public class RobotActivity extends BaseActivity implements RobotConnectionListen
     }
 
     private void sendChatMessageToDriver(Message message) {
-        robotChatClient.sendMessage(message);
+        messageQueueHandler.post(() -> {
+            robotChatClient.sendMessage(message);
+            synchronized (lock) {
+                try {
+                    lock.wait(MESSAGE_QUEUE_PERIOD);
+                } catch (InterruptedException e) {
+                    //do nothing
+                }
+            }
+        });
     }
 
-    public void registerChatMessageDebugListener(ChatMessageDebugListener listener){
+    public void registerChatMessageDebugListener(ChatMessageDebugListener listener) {
         chatMessageDebugListener = listener;
     }
 
-    public void unregisterChatMessageDebugListener(){
+    public void unregisterChatMessageDebugListener() {
         chatMessageDebugListener = null;
     }
 
-    private void sendMessageToDebugListener(Message message){
-        if(chatMessageDebugListener != null){
+    private void sendMessageToDebugListener(Message message) {
+        if (chatMessageDebugListener != null) {
             chatMessageDebugListener.showMessage(message);
         }
     }
@@ -152,12 +149,12 @@ public class RobotActivity extends BaseActivity implements RobotConnectionListen
     public void onCallReceived() {
         Toast.makeText(RobotActivity.this, "Call received", Toast.LENGTH_SHORT).show();
         robotConnection.connect(this);
-        showScanningFragment();
+        showWaitingFragment("Connecting to robot...");
     }
 
     @Override
     public void onSessionEnded() {
-        showWaitingFragment();
+        showWaitingFragment("Waiting for connection...");
     }
 
     @Override

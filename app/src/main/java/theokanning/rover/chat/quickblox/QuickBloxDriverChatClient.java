@@ -2,8 +2,6 @@ package theokanning.rover.chat.quickblox;
 
 import com.quickblox.users.model.QBUser;
 
-import theokanning.rover.user.User;
-
 /**
  * Driver-specific extension of {@link QuickBloxChatClient}
  *

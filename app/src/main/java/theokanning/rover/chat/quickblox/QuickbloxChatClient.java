@@ -38,7 +38,6 @@ import theokanning.rover.chat.listener.RobotChatListener;
 import theokanning.rover.chat.client.DriverChatClient;
 import theokanning.rover.chat.client.RobotChatClient;
 import theokanning.rover.chat.model.Message;
-import theokanning.rover.user.User;
 
 /**
  * Quickblox implementation of {@link RobotChatClient} and {@link RobotChatClient}
