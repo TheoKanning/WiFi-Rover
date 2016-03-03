@@ -11,7 +11,7 @@
 #define PWM_MIN -255
 #define PWM_MAX  255
 #define MIN_SPEED 50
-#define TIMEOUT 100
+#define TIMEOUT 150
 
 #define COMMAND_START '('
 #define COMMAND_END ')'

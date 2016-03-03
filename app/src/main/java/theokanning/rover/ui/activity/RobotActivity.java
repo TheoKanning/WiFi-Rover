@@ -6,6 +6,9 @@ import android.os.Handler;
 import android.util.Log;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.inject.Inject;
 
 import theokanning.rover.R;
@@ -26,7 +29,8 @@ public class RobotActivity extends BaseActivity implements RobotConnectionListen
 
     private static final String TAG = "RobotActivity";
 
-    private static final int MESSAGE_QUEUE_PERIOD = 80;
+    private static final int MESSAGE_QUEUE_PERIOD = 100;
+    private static final int MAX_QUEUE_SIZE = 5;
 
     @Inject
     RobotChatClient robotChatClient;
@@ -34,11 +38,23 @@ public class RobotActivity extends BaseActivity implements RobotConnectionListen
     @Inject
     RobotConnection robotConnection;
 
-    private final Object lock = new Object();
-
     private ChatMessageDebugListener chatMessageDebugListener;
 
-    private Handler messageQueueHandler = new Handler();
+    private List<String> robotCommandQueue = new ArrayList<>();
+
+    private Handler commandQueueHandler = new Handler();
+
+    private Runnable commandQueueRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (robotCommandQueue.size() > 0) {
+                String command = robotCommandQueue.get(0);
+                robotCommandQueue.remove(0);
+                sendDirectionsToRobot(command);
+            }
+            commandQueueHandler.postDelayed(this, MESSAGE_QUEUE_PERIOD);
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,11 +69,13 @@ public class RobotActivity extends BaseActivity implements RobotConnectionListen
     protected void onStart() {
         super.onStart();
         loginToChatService();
+        startProcessingCommandQueue();
     }
 
     @Override
     protected void onStop() {
         super.onStop();
+        stopProcessingCommandQueue();
         robotConnection.disconnect();
         robotChatClient.unregisterRobotChatCallbackListener();
         robotChatClient.unregisterChatCallbackListener();
@@ -103,16 +121,7 @@ public class RobotActivity extends BaseActivity implements RobotConnectionListen
     }
 
     private void sendChatMessageToDriver(Message message) {
-        messageQueueHandler.post(() -> {
-            robotChatClient.sendMessage(message);
-            synchronized (lock) {
-                try {
-                    lock.wait(MESSAGE_QUEUE_PERIOD);
-                } catch (InterruptedException e) {
-                    //do nothing
-                }
-            }
-        });
+        robotChatClient.sendMessage(message);
     }
 
     public void registerChatMessageDebugListener(ChatMessageDebugListener listener) {
@@ -127,6 +136,20 @@ public class RobotActivity extends BaseActivity implements RobotConnectionListen
         if (chatMessageDebugListener != null) {
             chatMessageDebugListener.showMessage(message);
         }
+    }
+
+    private void addCommandToQueue(String command){
+        if(robotCommandQueue.size() < MAX_QUEUE_SIZE){
+            robotCommandQueue.add(command);
+        }
+    }
+
+    private void startProcessingCommandQueue() {
+        commandQueueHandler.post(commandQueueRunnable);
+    }
+
+    private void stopProcessingCommandQueue() {
+        commandQueueHandler.removeCallbacks(commandQueueRunnable);
     }
 
     @Override
@@ -163,7 +186,7 @@ public class RobotActivity extends BaseActivity implements RobotConnectionListen
         sendMessageToDebugListener(message);
         switch (message.getTag()) {
             case ROBOT:
-                sendDirectionsToRobot(message.getContents());
+                addCommandToQueue(message.getContents());
                 break;
             case DISPLAY:
                 break;
