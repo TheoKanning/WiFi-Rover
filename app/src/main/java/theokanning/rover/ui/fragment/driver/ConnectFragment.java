@@ -22,6 +22,10 @@ public class ConnectFragment extends BaseFragment {
         ((DriverActivity) getActivity()).connect();
     }
 
+    public static ConnectFragment newInstance(){
+        return new ConnectFragment();
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {

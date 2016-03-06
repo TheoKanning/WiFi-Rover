@@ -2,6 +2,7 @@ package theokanning.rover.ui.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.FragmentManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -9,8 +10,8 @@ import javax.inject.Inject;
 
 import theokanning.rover.R;
 import theokanning.rover.RoverApplication;
-import theokanning.rover.chat.listener.DriverChatListener;
 import theokanning.rover.chat.client.DriverChatClient;
+import theokanning.rover.chat.listener.DriverChatListener;
 import theokanning.rover.chat.model.Message;
 import theokanning.rover.ui.fragment.WaitingFragment;
 import theokanning.rover.ui.fragment.driver.ConnectFragment;
@@ -47,8 +48,13 @@ public class DriverActivity extends BaseActivity implements DriverChatListener {
 
     @Override
     public void onBackPressed() {
-        super.onBackPressed();
         driverChatClient.endCall();
+        if (getSupportFragmentManager().getBackStackEntryCount() == 0) {
+            finish();
+        } else {
+            getSupportFragmentManager().popBackStack(ConnectFragment.class.getSimpleName(),
+                    FragmentManager.POP_BACK_STACK_INCLUSIVE);
+        }
     }
 
     private void loginToChatService() {
@@ -73,7 +79,11 @@ public class DriverActivity extends BaseActivity implements DriverChatListener {
     }
 
     private void showConnectFragment() {
-        setFragment(new ConnectFragment(), true);
+        ConnectFragment fragment = ConnectFragment.newInstance();
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .commit();
     }
 
     private void showWaitingFragment() {
@@ -81,14 +91,16 @@ public class DriverActivity extends BaseActivity implements DriverChatListener {
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.fragment_container, fragment)
+                .addToBackStack(ConnectFragment.class.getSimpleName())
                 .commit();
     }
 
     private void showControlFragment() {
-        ControlFragment fragment = new ControlFragment();
+        ControlFragment fragment = ControlFragment.newInstance();
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.fragment_container, fragment)
+                .addToBackStack(null)
                 .commit();
     }
 

@@ -41,6 +41,10 @@ public class ControlFragment extends BaseFragment implements QBRTCClientVideoTra
     @Bind(R.id.dpad)
     Dpad dpad;
 
+    public static ControlFragment newInstance(){
+        return new ControlFragment();
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
