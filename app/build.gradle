@@ -3,13 +3,13 @@ apply plugin: 'com.neenbedankt.android-apt'
 apply plugin: 'me.tatarka.retrolambda'
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion "23.0.2"
+    compileSdkVersion 25
+    buildToolsVersion "25.0.0"
 
     defaultConfig {
         applicationId "theokanning.rover"
         minSdkVersion 16
-        targetSdkVersion 23
+        targetSdkVersion 25
         versionCode 1
         versionName "1.0"
 
@@ -32,7 +32,7 @@ android {
 }
 
 ext {
-    supportVersion = "23.1.1"
+    supportVersion = "25.0.0"
 }
 
 final DAGGER_VERSION = '2.0.1'
