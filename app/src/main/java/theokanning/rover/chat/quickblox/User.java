@@ -1,4 +1,4 @@
-package theokanning.rover.user;
+package theokanning.rover.chat.quickblox;
 
 import com.quickblox.users.model.QBUser;
 

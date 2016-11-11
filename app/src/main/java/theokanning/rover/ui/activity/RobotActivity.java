@@ -1,271 +1,198 @@
 package theokanning.rover.ui.activity;
 
-import android.bluetooth.BluetoothDevice;
+import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.quickblox.chat.QBChatService;
-import com.quickblox.chat.QBPrivateChat;
-import com.quickblox.chat.QBPrivateChatManager;
-import com.quickblox.chat.QBSignaling;
-import com.quickblox.chat.QBWebRTCSignaling;
-import com.quickblox.chat.exception.QBChatException;
-import com.quickblox.chat.listeners.QBMessageListener;
-import com.quickblox.chat.listeners.QBPrivateChatManagerListener;
-import com.quickblox.chat.listeners.QBVideoChatSignalingManagerListener;
-import com.quickblox.chat.model.QBChatMessage;
-import com.quickblox.videochat.webrtc.QBRTCClient;
-import com.quickblox.videochat.webrtc.QBRTCConfig;
-import com.quickblox.videochat.webrtc.QBRTCSession;
-import com.quickblox.videochat.webrtc.callbacks.QBRTCClientSessionCallbacks;
+import java.util.ArrayList;
+import java.util.List;
 
-import org.jivesoftware.smack.SmackException;
-import org.jivesoftware.smack.XMPPException;
-
-import java.util.HashMap;
-import java.util.Map;
+import javax.inject.Inject;
 
 import theokanning.rover.R;
-import theokanning.rover.bluetooth.BluetoothConnection;
-import theokanning.rover.bluetooth.BluetoothScanner;
+import theokanning.rover.RoverApplication;
+import theokanning.rover.chat.client.RobotChatClient;
+import theokanning.rover.chat.listener.RobotChatListener;
+import theokanning.rover.chat.model.Message;
+import theokanning.rover.robot.RobotConnection;
+import theokanning.rover.robot.RobotConnectionListener;
 import theokanning.rover.ui.fragment.WaitingFragment;
+import theokanning.rover.ui.fragment.robot.ChatMessageDebugListener;
+import theokanning.rover.ui.fragment.robot.ConnectedFragment;
 
 /**
- * Controls all call activity for the robot
+ * Controls all call activity for the robot. Only receives calls.
  */
-public class RobotActivity extends BaseActivity implements QBRTCClientSessionCallbacks, BluetoothConnection.BluetoothConnectionListener {
+public class RobotActivity extends BaseActivity implements RobotConnectionListener, RobotChatListener {
 
     private static final String TAG = "RobotActivity";
-    private static final int ROBOT_COMMAND_MAX = 255;
 
-    private QBPrivateChat privateChat;
+    private static final int MESSAGE_QUEUE_PERIOD = 100;
+    private static final int MAX_QUEUE_SIZE = 5;
 
-    private BluetoothScanner bluetoothScanner;
-    private BluetoothConnection bluetoothConnection;
+    @Inject
+    RobotChatClient robotChatClient;
 
+    @Inject
+    RobotConnection robotConnection;
+
+    private ChatMessageDebugListener chatMessageDebugListener;
+
+    private List<String> robotCommandQueue = new ArrayList<>();
+
+    private Handler commandQueueHandler = new Handler();
+
+    private Runnable commandQueueRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (robotCommandQueue.size() > 0) {
+                String command = robotCommandQueue.get(0);
+                robotCommandQueue.remove(0);
+                sendDirectionsToRobot(command);
+            }
+            commandQueueHandler.postDelayed(this, MESSAGE_QUEUE_PERIOD);
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_robot);
+        ((RoverApplication) getApplication()).getComponent().inject(this);
+        robotChatClient.registerRobotChatCallbackListener(this);
+        robotChatClient.registerChatCallbackListener(this);
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        initQbrtcClient();
-        initChatClient();
-        showWaitingFragment();
+        loginToChatService();
+        startProcessingCommandQueue();
     }
 
-    /**
-     * Tells the client that this activity is prepared to process calls and sets this activity
-     * as a listener for client callback
-     */
-    private void initQbrtcClient() {
-        QBRTCClient.getInstance(this).prepareToProcessCalls();
-        QBRTCClient.getInstance(this).addSessionCallbacksListener(this);
-
-        QBChatService.getInstance().getVideoChatWebRTCSignalingManager()
-                .addSignalingManagerListener(new QBVideoChatSignalingManagerListener() {
-                    @Override
-                    public void signalingCreated(QBSignaling qbSignaling, boolean createdLocally) {
-                        if (!createdLocally) {
-                            QBRTCClient.getInstance(RobotActivity.this).addSignaling((QBWebRTCSignaling) qbSignaling);
-                        }
-                    }
-                });
-
-        QBRTCConfig.setDebugEnabled(false);
+    @Override
+    protected void onStop() {
+        super.onStop();
+        stopProcessingCommandQueue();
+        robotConnection.disconnect();
+        robotChatClient.unregisterRobotChatCallbackListener();
+        robotChatClient.unregisterChatCallbackListener();
     }
 
-    private void initChatClient() {
-        QBPrivateChatManagerListener privateChatManagerListener = new QBPrivateChatManagerListener() {
-            @Override
-            public void chatCreated(final QBPrivateChat incomingPrivateChat, final boolean createdLocally) {
-                if (!createdLocally) {
-                    privateChat = incomingPrivateChat;
-                    privateChat.addMessageListener(privateChatMessageListener);
-                }
-            }
-        };
-        QBPrivateChatManager privateChatManager = QBChatService.getInstance().getPrivateChatManager();
-        privateChatManager.addPrivateChatManagerListener(privateChatManagerListener);
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        robotChatClient.endCall();
     }
 
-    /**
-     * Shows a waiting fragment to tell the user that the app is waiting for a connection
-     */
-    private void showWaitingFragment() {
-        WaitingFragment fragment = new WaitingFragment();
-        Bundle bundle = new Bundle();
-        bundle.putString(WaitingFragment.WAITING_TEXT_EXTRA, "Waiting for connection...");
-        fragment.setArguments(bundle);
-        setFragment(fragment, true);
-    }
-
-    /**
-     * Show a waiting fragment to tell the user that the app is scanning for the robot over bluetooth
-     */
-    private void showScanningFragment() {
-        WaitingFragment fragment = new WaitingFragment();
-        Bundle bundle = new Bundle();
-        bundle.putString(WaitingFragment.WAITING_TEXT_EXTRA, "Scanning for robot...");
-        fragment.setArguments(bundle);
-        setFragment(fragment, true);
-    }
-
-    private void scanForRobot() {
-        Log.d(TAG, "Starting scan for robot");
-        showScanningFragment();
-        bluetoothScanner = new BluetoothScanner(this);
-        bluetoothScanner.startScan(new BluetoothScanner.OnBluetoothDeviceDiscoveredListener() {
-            @Override
-            public void OnBluetoothDeviceDiscovered(BluetoothDevice device) {
-                Log.d(TAG, "Bluetooth device found: " + device.getName());
-                if (device.getName().equals("Dexter")) {
-                    bluetoothConnection = new BluetoothConnection(device, RobotActivity.this);
-                    sendChatMessage("Found robot");
-                }
+    private void loginToChatService() {
+        showWaitingFragment("Logging in to chat service...");
+        robotChatClient.login(this).subscribe((success) -> {
+            if (success) {
+                showWaitingFragment("Waiting for connection...");
+            } else {
+                Intent intent = new Intent(RobotActivity.this, ModeSelectionActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
             }
         });
     }
 
-    /**
-     * Sends a chat message
-     */
-    private void sendChatMessage(String message) {
-        if (privateChat != null) {
-            try {
-                privateChat.sendMessage(message);
-            } catch (XMPPException | SmackException.NotConnectedException e) {
+    private void sendDirectionsToRobot(String command) {
+        robotConnection.sendMessage(command);
+    }
 
-            }
+    private void showWaitingFragment(String message) {
+        WaitingFragment fragment = WaitingFragment.newInstance(message);
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .commit();
+    }
+
+    private void showConnectedFragment() {
+        ConnectedFragment fragment = ConnectedFragment.newInstance();
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .commit();
+    }
+
+    private void sendChatMessageToDriver(Message message) {
+        robotChatClient.sendMessage(message);
+    }
+
+    public void registerChatMessageDebugListener(ChatMessageDebugListener listener) {
+        chatMessageDebugListener = listener;
+    }
+
+    public void unregisterChatMessageDebugListener() {
+        chatMessageDebugListener = null;
+    }
+
+    private void sendMessageToDebugListener(Message message) {
+        if (chatMessageDebugListener != null) {
+            chatMessageDebugListener.showMessage(message);
         }
     }
 
-    /**
-     * Sends a directional command to the robot after converting it to RL values
-     *
-     * @param direction direction robot should move
-     */
-    private void sendDirections(SteeringListener.Direction direction) {
-        if (connectedToRobot()) {
-            int left = 0;
-            int right = 0;
-            switch (direction) {
-                case UP:
-                    left = ROBOT_COMMAND_MAX;
-                    right = ROBOT_COMMAND_MAX;
-                    break;
-                case DOWN:
-                    left = -1 * ROBOT_COMMAND_MAX;
-                    right = -1 * ROBOT_COMMAND_MAX;
-                    break;
-                case LEFT:
-                    right = ROBOT_COMMAND_MAX / 2;
-                    left = -1 * ROBOT_COMMAND_MAX / 2;
-                    break;
-                case RIGHT:
-                    right = -1 * ROBOT_COMMAND_MAX / 2;
-                    left = ROBOT_COMMAND_MAX / 2;
-                    break;
-            }
-            String bluetoothCommand = "L" + left + "\rR" + right + "\r";
-            bluetoothConnection.write(bluetoothCommand);
-        } else {
-            Log.d(TAG, "Can't send command, not connected to robot");
+    private void addCommandToQueue(String command){
+        if(robotCommandQueue.size() < MAX_QUEUE_SIZE){
+            robotCommandQueue.add(command);
         }
     }
 
-    @Override
-    public void onReceiveNewSession(final QBRTCSession qbrtcSession) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                Toast.makeText(RobotActivity.this, "Call received", Toast.LENGTH_SHORT).show();
-                Log.d(TAG, "Call received");
-
-                Map<String, String> userInfo = new HashMap<>();
-                userInfo.put("Key", "Robot");
-
-                // Accept incoming call
-                qbrtcSession.acceptCall(qbrtcSession.getUserInfo());
-                scanForRobot();
-            }
-        });
+    private void startProcessingCommandQueue() {
+        commandQueueHandler.post(commandQueueRunnable);
     }
 
-    @Override
-    public void onUserNotAnswer(QBRTCSession qbrtcSession, Integer integer) {
-        //Should not happen
-    }
-
-    @Override
-    public void onCallRejectByUser(QBRTCSession qbrtcSession, Integer integer, Map<String, String> map) {
-        //Should not happen
-    }
-
-    @Override
-    public void onCallAcceptByUser(QBRTCSession qbrtcSession, Integer integer, Map<String, String> map) {
-        //Should not happen
-    }
-
-    @Override
-    public void onReceiveHangUpFromUser(QBRTCSession qbrtcSession, Integer integer) {
-
-    }
-
-    @Override
-    public void onUserNoActions(QBRTCSession qbrtcSession, Integer integer) {
-
-    }
-
-    @Override
-    public void onSessionClosed(QBRTCSession qbrtcSession) {
-
-    }
-
-    @Override
-    public void onSessionStartClose(QBRTCSession qbrtcSession) {
-
-    }
-
-    QBMessageListener<QBPrivateChat> privateChatMessageListener = new QBMessageListener<QBPrivateChat>() {
-        @Override
-        public void processMessage(QBPrivateChat privateChat, final QBChatMessage chatMessage) {
-            Log.e(TAG, "Message received: " + chatMessage.getBody());
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    sendDirections(SteeringListener.Direction.valueOf(chatMessage.getBody()));
-                }
-            });
-        }
-
-        @Override
-        public void processError(QBPrivateChat privateChat, QBChatException error, QBChatMessage originMessage) {
-            Log.e(TAG, error.getMessage());
-        }
-    };
-
-    private boolean connectedToRobot(){
-        return bluetoothConnection != null && bluetoothConnection.isConnected();
-    }
-
-    @Override
-    public void onMessageReceived(String message) {
-
+    private void stopProcessingCommandQueue() {
+        commandQueueHandler.removeCallbacks(commandQueueRunnable);
     }
 
     @Override
     public void onConnect() {
-        sendChatMessage("Connected to robot");
+        sendChatMessageToDriver(new Message(Message.Tag.DISPLAY, "Connected to robot"));
+        runOnUiThread(this::showConnectedFragment);
     }
 
     @Override
     public void onDisconnect() {
-        sendChatMessage("Disconnected from robot");
+        sendChatMessageToDriver(new Message(Message.Tag.DISPLAY, "Disconnected from robot"));
+    }
+
+    @Override
+    public void onMessageReceived(String message) {
+        Log.d(TAG, "Received message: " + message);
+    }
+
+    @Override
+    public void onCallReceived() {
+        Toast.makeText(RobotActivity.this, "Call received", Toast.LENGTH_SHORT).show();
+        robotConnection.connect(this);
+        showWaitingFragment("Connecting to robot...");
+    }
+
+    @Override
+    public void onSessionEnded() {
+        showWaitingFragment("Waiting for connection...");
+    }
+
+    @Override
+    public void onChatMessageReceived(Message message) {
+        Log.e(TAG, "Message received: " + message);
+        sendMessageToDebugListener(message);
+        switch (message.getTag()) {
+            case ROBOT:
+                addCommandToQueue(message.getContents());
+                break;
+            case DISPLAY:
+                break;
+            case TEST:
+                Log.e(TAG, message.getContents());
+            default:
+        }
     }
 }

@@ -22,10 +22,13 @@ public class ConnectFragment extends BaseFragment {
         ((DriverActivity) getActivity()).connect();
     }
 
+    public static ConnectFragment newInstance(){
+        return new ConnectFragment();
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_connect, container, false);
     }
 

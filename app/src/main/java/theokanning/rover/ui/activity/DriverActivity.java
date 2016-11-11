@@ -1,116 +1,107 @@
 package theokanning.rover.ui.activity;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.FragmentManager;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.quickblox.chat.QBChatService;
-import com.quickblox.chat.QBPrivateChat;
-import com.quickblox.chat.QBSignaling;
-import com.quickblox.chat.QBWebRTCSignaling;
-import com.quickblox.chat.exception.QBChatException;
-import com.quickblox.chat.listeners.QBMessageListener;
-import com.quickblox.chat.listeners.QBVideoChatSignalingManagerListener;
-import com.quickblox.chat.model.QBChatMessage;
-import com.quickblox.videochat.webrtc.QBRTCClient;
-import com.quickblox.videochat.webrtc.QBRTCConfig;
-import com.quickblox.videochat.webrtc.QBRTCSession;
-import com.quickblox.videochat.webrtc.QBRTCTypes;
-import com.quickblox.videochat.webrtc.callbacks.QBRTCClientSessionCallbacks;
-import com.quickblox.videochat.webrtc.callbacks.QBRTCClientVideoTracksCallbacks;
-
-import org.jivesoftware.smack.SmackException;
-import org.jivesoftware.smack.XMPPException;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import javax.inject.Inject;
 
 import theokanning.rover.R;
+import theokanning.rover.RoverApplication;
+import theokanning.rover.chat.client.DriverChatClient;
+import theokanning.rover.chat.listener.DriverChatListener;
+import theokanning.rover.chat.model.Message;
 import theokanning.rover.ui.fragment.WaitingFragment;
 import theokanning.rover.ui.fragment.driver.ConnectFragment;
 import theokanning.rover.ui.fragment.driver.ControlFragment;
-import theokanning.rover.user.User;
 
 /**
  * Activity where user controls remote device and watches video stream. Starts by showing
  * instructions to connect to remote device, then connects and shows video stream.
  */
-public class DriverActivity extends BaseActivity implements QBRTCClientSessionCallbacks, SteeringListener {
+public class DriverActivity extends BaseActivity implements DriverChatListener {
     private static final String TAG = "DriverActivity";
 
-    private QBRTCSession currentSession;
-    private QBPrivateChat privateChat;
+    //todo understand fragment back stack
+
+    @Inject
+    DriverChatClient driverChatClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        ((RoverApplication) getApplication()).getComponent().inject(this);
         setContentView(R.layout.activity_driver);
-
-        initQbrtcClient();
-        showConnectFragment();
+        driverChatClient.registerChatCallbackListener(this);
+        driverChatClient.registerDriverChatCallbackListener(this);
+        loginToChatService();
     }
 
-    private void initQbrtcClient() {
-
-        QBChatService.getInstance().getVideoChatWebRTCSignalingManager()
-                .addSignalingManagerListener(new QBVideoChatSignalingManagerListener() {
-                    @Override
-                    public void signalingCreated(QBSignaling qbSignaling, boolean createdLocally) {
-                        if (!createdLocally) {
-                            QBRTCClient.getInstance(DriverActivity.this).addSignaling((QBWebRTCSignaling) qbSignaling);
-                        }
-                    }
-                });
-
-        QBRTCConfig.setAnswerTimeInterval(10); //Wait for 10 seconds before giving up call
-        QBRTCConfig.setDebugEnabled(false);
-
-        QBRTCClient.getInstance(this).addSessionCallbacksListener(this);
-        QBRTCClient.getInstance(this).prepareToProcessCalls();
+    @Override
+    protected void onStop() {
+        super.onStop();
+        driverChatClient.unregisterDriverChatCallbackListener();
+        driverChatClient.unregisterChatCallbackListener();
     }
 
-    /**
-     * Gets the chat session and sends a text message
-     *
-     * @param message string to send over chat client
-     */
-    private void sendChatMessage(String message) {
-        if (privateChat == null) {
-            Integer opponentId = User.ROBOT.getId();
-            privateChat = QBChatService.getInstance()
-                    .getPrivateChatManager()
-                    .createChat(opponentId, privateChatMessageListener);
-        }
-
-        try {
-            QBChatMessage chatMessage = new QBChatMessage();
-            chatMessage.setBody(message);
-            privateChat.sendMessage(chatMessage);
-        } catch (XMPPException e) {
-
-        } catch (SmackException.NotConnectedException e) {
-
+    @Override
+    public void onBackPressed() {
+        driverChatClient.endCall();
+        if (getSupportFragmentManager().getBackStackEntryCount() == 0) {
+            finish();
+        } else {
+            getSupportFragmentManager().popBackStack(ConnectFragment.class.getSimpleName(),
+                    FragmentManager.POP_BACK_STACK_INCLUSIVE);
         }
     }
 
-    /**
-     * Shows connect fragment that gives user option to initiate call
-     */
+    private void loginToChatService() {
+        showLoggingInFragment();
+        driverChatClient.login(this).subscribe((success) -> {
+            if (success) {
+                showConnectFragment();
+            } else {
+                Intent intent = new Intent(DriverActivity.this, ModeSelectionActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+            }
+        });
+    }
+
+    private void showLoggingInFragment() {
+        WaitingFragment fragment = WaitingFragment.newInstance("Logging in to chat service...");
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .commit();
+    }
+
     private void showConnectFragment() {
-        setFragment(new ConnectFragment(), true);
+        ConnectFragment fragment = ConnectFragment.newInstance();
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .commit();
     }
 
-    /**
-     * Shows waiting screen when starting call
-     */
     private void showWaitingFragment() {
-        WaitingFragment fragment = new WaitingFragment();
-        Bundle bundle = new Bundle();
-        bundle.putString(WaitingFragment.WAITING_TEXT_EXTRA, "Attempting to connect to robot...");
-        fragment.setArguments(bundle);
-        setFragment(fragment, true);
+        WaitingFragment fragment = WaitingFragment.newInstance("Attempting to connect to robot...");
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .addToBackStack(ConnectFragment.class.getSimpleName())
+                .commit();
+    }
+
+    private void showControlFragment() {
+        ControlFragment fragment = ControlFragment.newInstance();
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .addToBackStack(null)
+                .commit();
     }
 
     /**
@@ -118,99 +109,29 @@ public class DriverActivity extends BaseActivity implements QBRTCClientSessionCa
      */
     public void connect() {
         showWaitingFragment();
-
-        List<Integer> ids = new ArrayList<>();
-        ids.add(User.ROBOT.getId());
-
-        //Init session
-        currentSession = QBRTCClient.getInstance(this).createNewSessionWithOpponents(ids,
-                QBRTCTypes.QBConferenceType.QB_CONFERENCE_TYPE_VIDEO);
-
-
-        Map<String, String> userInfo = new HashMap<>();
-        userInfo.put("key", "robot");
-
-        //Start call
-        Log.d(TAG, "Starting call");
-        currentSession.startCall(currentSession.getUserInfo());
-    }
-
-    public void addVideoTrackCallbacksListener(QBRTCClientVideoTracksCallbacks videoTracksCallbacks) {
-        if (currentSession != null) {
-            currentSession.addVideoTrackCallbacksListener(videoTracksCallbacks);
-        }
+        driverChatClient.startCall();
     }
 
     @Override
-    public void onReceiveNewSession(QBRTCSession qbrtcSession) {
-        //Should not happen
+    public void onCallAnswered() {
+        Toast.makeText(this, "Starting video chat", Toast.LENGTH_SHORT).show();
+        Log.d(TAG, "Connected successfully");
+        showControlFragment();
     }
 
     @Override
-    public void onUserNotAnswer(QBRTCSession qbrtcSession, Integer integer) {
+    public void onCallNotAnswered() {
         Toast.makeText(this, "Robot did not answer", Toast.LENGTH_SHORT).show();
         showConnectFragment();
     }
 
     @Override
-    public void onCallRejectByUser(QBRTCSession qbrtcSession, Integer integer, Map<String, String> map) {
-        Log.e(TAG, "Call rejected, should not happen");
-    }
-
-    @Override
-    public void onCallAcceptByUser(QBRTCSession qbrtcSession, Integer integer, Map<String, String> map) {
-        if (qbrtcSession != currentSession) {
-            Log.e(TAG, "Call accepted for incorrect session");
-            return;
-        }
-        Toast.makeText(this, "Connected to robot", Toast.LENGTH_SHORT).show();
-        Log.d(TAG, "Connected successfully");
-        setFragment(new ControlFragment(), true);
-    }
-
-    @Override
-    public void onReceiveHangUpFromUser(QBRTCSession qbrtcSession, Integer integer) {
-
-    }
-
-    @Override
-    public void onUserNoActions(QBRTCSession qbrtcSession, Integer integer) {
-
-    }
-
-    @Override
-    public void onSessionClosed(QBRTCSession qbrtcSession) {
+    public void onSessionEnded() {
         showConnectFragment();
     }
 
     @Override
-    public void onSessionStartClose(QBRTCSession qbrtcSession) {
-
-    }
-
-    QBMessageListener<QBPrivateChat> privateChatMessageListener = new QBMessageListener<QBPrivateChat>() {
-        @Override
-        public void processMessage(QBPrivateChat privateChat, final QBChatMessage chatMessage) {
-            Toast.makeText(DriverActivity.this, chatMessage.getBody(), Toast.LENGTH_SHORT).show();
-        }
-
-        @Override
-        public void processError(QBPrivateChat privateChat, QBChatException error, QBChatMessage originMessage) {
-            Log.e(TAG, error.getMessage());
-        }
-    };
-
-    @Override
-    public void onBackPressed() {
-        super.onBackPressed();
-
-        if (currentSession != null) {
-            currentSession.hangUp(null);
-        }
-    }
-
-    @Override
-    public void sendCommand(Direction direction) {
-        sendChatMessage(direction.toString());
+    public void onChatMessageReceived(Message message) {
+        Toast.makeText(this, message.getContents(), Toast.LENGTH_SHORT).show();
     }
 }
