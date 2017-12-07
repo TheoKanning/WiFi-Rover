@@ -15,36 +15,15 @@ import org.jivesoftware.smack.XMPPException;
 import java.io.IOException;
 
 /**
- * Background task for logging in to QuickBlox service
+ * Class that logs in to QuickBlox. Should be called on background thread
  *
  * @author Theo Kanning
  */
-public class QuickBloxLoginTask extends AsyncTask<Void, Void, Boolean> {
+class QuickBloxLoginService {
 
-    //todo wrap try catch blocks in separate methods
+    private static final String TAG = "QuickBloxLoginService";
 
-    private static final String TAG = "QuickBloxLoginTask";
-
-    public interface LoginTaskCallback {
-        void onSuccess();
-
-        void onFailure();
-    }
-
-    private LoginTaskCallback callback;
-
-    private Context context;
-
-    private QBUser user;
-
-    public QuickBloxLoginTask(QBUser user, Context context, LoginTaskCallback callback) {
-        this.user = user;
-        this.callback = callback;
-        this.context = context;
-    }
-
-    @Override
-    protected Boolean doInBackground(Void... params) {
+    boolean login(QBUser user, Context context) {
 
         try {
             QBAuth.createSession(user);
@@ -79,15 +58,5 @@ public class QuickBloxLoginTask extends AsyncTask<Void, Void, Boolean> {
 
         Log.d(TAG, "Logged in successfully");
         return true;
-    }
-
-    @Override
-    protected void onPostExecute(Boolean aBoolean) {
-        super.onPostExecute(aBoolean);
-         if(aBoolean){
-            callback.onSuccess();
-        } else {
-            callback.onFailure();
-        }
     }
 }

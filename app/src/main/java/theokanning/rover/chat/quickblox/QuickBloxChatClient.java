@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.Map;
 
 import rx.Observable;
-import rx.Subscriber;
 import theokanning.rover.chat.listener.ChatListener;
 import theokanning.rover.chat.listener.DriverChatListener;
 import theokanning.rover.chat.listener.RobotChatListener;
@@ -123,16 +122,16 @@ public abstract class QuickBloxChatClient implements RobotChatClient, DriverChat
     public Observable<Boolean> login(final Context context) {
         this.context = context;
         final QBUser user = getUser();
-        Observable<Boolean> observable = Observable.create(new Observable.OnSubscribe<Boolean>() {
-            @Override
-            public void call(final Subscriber<? super Boolean> subscriber) {
-                QuickBloxLoginTask task = new QuickBloxLoginTask(user, context,
-                        new LoginTaskSubscriberAdapter(subscriber, QuickBloxChatClient.this));
-                task.execute();
-            }
-        });
 
-        return observable;
+        return Observable.create(subscriber -> {
+            QuickBloxLoginService task = new QuickBloxLoginService();
+            boolean result = task.login(user, context);
+            if (result) {
+                enableChatServices();
+            }
+            subscriber.onNext(result);
+            subscriber.onCompleted();
+        });
     }
 
     public void enableChatServices() {
