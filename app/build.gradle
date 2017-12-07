@@ -31,14 +31,12 @@ android {
     }
 }
 
-ext {
-    supportVersion = "25.0.0"
-}
 
-final DAGGER_VERSION = '2.0.1'
-final DEXMAKER_VERSION = '1.2'
-final RUNNER_VERSION = '0.4'
-final ESPRESSO_VERSION = '2.2.1'
+final supportVersion = "25.0.0"
+final daggerVersion = '2.0.1'
+final dexmakerVersion = '1.2'
+final runnerVersion = '0.4'
+final espressoVersion = '2.2.1'
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
@@ -51,24 +49,25 @@ dependencies {
     compile "com.android.support:design:$supportVersion"
     compile "com.android.support:cardview-v7:$supportVersion"
     compile "com.android.support:recyclerview-v7:$supportVersion"
+    compile "com.android.support:support-v4:$supportVersion"
+
     compile 'com.google.code.gson:gson:2.4'
-    compile 'com.google.dagger:dagger:2.0.1'
+    compile "com.google.dagger:dagger:$daggerVersion"
     compile 'com.jakewharton:butterknife:7.0.1'
     compile "io.reactivex:rxjava:1.0.14"
     compile "io.reactivex:rxandroid:1.0.1"
     compile 'net.danlew:android.joda:2.8.2'
-    compile "com.android.support:support-v4:$supportVersion"
     compile 'com.github.felHR85:UsbSerial:3.3'
 
 
-    androidTestCompile 'com.google.dagger:dagger:2.0.1'
-    androidTestCompile "com.android.support.test:runner:${RUNNER_VERSION}"
-    androidTestCompile "com.android.support.test:rules:${RUNNER_VERSION}"
-    androidTestCompile "com.android.support.test.espresso:espresso-core:${ESPRESSO_VERSION}"
-    androidTestCompile "com.android.support.test.espresso:espresso-intents:${ESPRESSO_VERSION}"
-    androidTestCompile "com.google.dexmaker:dexmaker:${DEXMAKER_VERSION}"
-    androidTestCompile "com.google.dexmaker:dexmaker-mockito:${DEXMAKER_VERSION}"
+    androidTestCompile "com.google.dagger:dagger:$daggerVersion"
+    androidTestCompile "com.android.support.test:runner:$runnerVersion"
+    androidTestCompile "com.android.support.test:rules:$runnerVersion"
+    androidTestCompile "com.android.support.test.espresso:espresso-core:$espressoVersion"
+    androidTestCompile "com.android.support.test.espresso:espresso-intents:$espressoVersion"
+    androidTestCompile "com.google.dexmaker:dexmaker:$dexmakerVersion"
+    androidTestCompile "com.google.dexmaker:dexmaker-mockito:$dexmakerVersion"
     androidTestCompile 'org.mockito:mockito-core:1.10.19'
     androidTestCompile "com.android.support:support-annotations:$supportVersion"
-    androidTestApt "com.google.dagger:dagger-compiler:${DAGGER_VERSION}"
+    androidTestApt "com.google.dagger:dagger-compiler:$daggerVersion"
 }
