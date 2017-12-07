@@ -2,6 +2,8 @@ package theokanning.rover.dagger;
 
 import android.content.Context;
 
+import com.quickblox.videochat.webrtc.QBRTCClient;
+
 import javax.inject.Singleton;
 
 import dagger.Module;
@@ -22,13 +24,19 @@ public class ChatModule {
 
     @Singleton
     @Provides
-    DriverChatClient provideDriverChatClient(){
-        return new QuickBloxDriverChatClient();
+    DriverChatClient provideDriverChatClient(QBRTCClient qbrtcClient){
+        return new QuickBloxDriverChatClient(qbrtcClient);
     }
 
     @Singleton
     @Provides
-    RobotChatClient provideRobotChatClient(){
-        return new QuickBloxRobotChatClient();
+    RobotChatClient provideRobotChatClient(QBRTCClient qbrtcClient){
+        return new QuickBloxRobotChatClient(qbrtcClient);
+    }
+
+    @Singleton
+    @Provides
+    QBRTCClient provideQbrtcClient() {
+        return QBRTCClient.getInstance(context);
     }
 }

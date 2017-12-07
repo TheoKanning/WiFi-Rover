@@ -47,7 +47,7 @@ public abstract class QuickBloxChatClient implements RobotChatClient, DriverChat
 
     private static final String TAG = "QuickBloxChatClient";
 
-    private Context context;
+    private QBRTCClient qbrtcClient;
 
     private QBPrivateChat privateChat;
     private QBRTCSession currentSession;
@@ -55,6 +55,10 @@ public abstract class QuickBloxChatClient implements RobotChatClient, DriverChat
     private ChatListener chatListener;
     private RobotChatListener robotChatCallbackListener;
     private DriverChatListener driverChatCallbackListener;
+
+    QuickBloxChatClient(QBRTCClient qbrtcClient) {
+        this.qbrtcClient = qbrtcClient;
+    }
 
     QBMessageListener<QBPrivateChat> privateChatMessageListener = new QBMessageListener<QBPrivateChat>() {
         @Override
@@ -75,10 +79,11 @@ public abstract class QuickBloxChatClient implements RobotChatClient, DriverChat
         //todo create a new class implements callbacks, then extend that class and only override those that are needed
         @Override
         public void onReceiveNewSession(QBRTCSession qbrtcSession) {
-            ((Activity) context).runOnUiThread(() -> {
+            //todo see if this still needs the UI thread after updating QB dependency
+//            ((Activity) context).runOnUiThread(() -> {
                 qbrtcSession.acceptCall(new HashMap<>());
                 currentSession = qbrtcSession;
-            });
+//            });
             robotChatCallbackListener.onCallReceived();
         }
 
@@ -120,7 +125,6 @@ public abstract class QuickBloxChatClient implements RobotChatClient, DriverChat
 
     @Override
     public Observable<Boolean> login(final Context context) {
-        this.context = context;
         final QBUser user = getUser();
 
         return Observable.create(subscriber -> {
@@ -136,8 +140,8 @@ public abstract class QuickBloxChatClient implements RobotChatClient, DriverChat
 
     public void enableChatServices() {
         //todo make it more clear where this is being called
-        QBRTCClient.getInstance(context).prepareToProcessCalls();
-        QBRTCClient.getInstance(context).addSessionCallbacksListener(sessionCallbacks);
+        qbrtcClient.prepareToProcessCalls();
+        qbrtcClient.addSessionCallbacksListener(sessionCallbacks);
         QBRTCConfig.setAnswerTimeInterval(10);
         enableReceivingVideoCalls();
         enableReceivingPrivateChats();
@@ -149,7 +153,7 @@ public abstract class QuickBloxChatClient implements RobotChatClient, DriverChat
 
         signalingManager.addSignalingManagerListener((qbSignaling, createdLocally) -> {
             if (!createdLocally) {
-                QBRTCClient.getInstance(context).addSignaling((QBWebRTCSignaling) qbSignaling);
+                qbrtcClient.addSignaling((QBWebRTCSignaling) qbSignaling);
             }
         });
     }
@@ -170,7 +174,7 @@ public abstract class QuickBloxChatClient implements RobotChatClient, DriverChat
         List<Integer> ids = new ArrayList<>();
         ids.add(User.ROBOT.getId());
 
-        currentSession = QBRTCClient.getInstance(context).createNewSessionWithOpponents(ids,
+        currentSession = qbrtcClient.createNewSessionWithOpponents(ids,
                 QBRTCTypes.QBConferenceType.QB_CONFERENCE_TYPE_VIDEO);
 
         Log.d(TAG, "Starting call");
