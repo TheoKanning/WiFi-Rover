@@ -1,18 +1,26 @@
 package theokanning.rover.chat.quickblox;
 
 import android.content.Context;
+import android.os.Bundle;
 import android.util.Log;
 
 import com.google.gson.Gson;
 import com.quickblox.chat.QBChatService;
+import com.quickblox.chat.QBIncomingMessagesManager;
 import com.quickblox.chat.QBPrivateChat;
 import com.quickblox.chat.QBPrivateChatManager;
+import com.quickblox.chat.QBRestChatService;
 import com.quickblox.chat.QBVideoChatWebRTCSignalingManager;
-import com.quickblox.chat.QBWebRTCSignaling;
 import com.quickblox.chat.exception.QBChatException;
+import com.quickblox.chat.listeners.QBChatDialogMessageListener;
 import com.quickblox.chat.listeners.QBMessageListener;
 import com.quickblox.chat.listeners.QBPrivateChatManagerListener;
+import com.quickblox.chat.model.QBChatDialog;
 import com.quickblox.chat.model.QBChatMessage;
+import com.quickblox.chat.utils.DialogUtils;
+import com.quickblox.core.QBEntityCallback;
+import com.quickblox.core.exception.QBResponseException;
+import com.quickblox.users.QBUsers;
 import com.quickblox.users.model.QBUser;
 import com.quickblox.videochat.webrtc.QBRTCClient;
 import com.quickblox.videochat.webrtc.QBRTCConfig;
@@ -47,8 +55,8 @@ public abstract class QuickBloxChatClient implements RobotChatClient, DriverChat
 
     private QBRTCClient qbrtcClient;
 
-    private QBPrivateChat privateChat;
     private QBRTCSession currentSession;
+    private QBChatDialog chatDialog;
 
     private ChatListener chatListener;
     private RobotChatListener robotChatCallbackListener;
@@ -58,18 +66,18 @@ public abstract class QuickBloxChatClient implements RobotChatClient, DriverChat
         this.qbrtcClient = qbrtcClient;
     }
 
-    QBMessageListener<QBPrivateChat> privateChatMessageListener = new QBMessageListener<QBPrivateChat>() {
+    QBChatDialogMessageListener chatMessageListener = new QBChatDialogMessageListener() {
         @Override
-        public void processMessage(QBPrivateChat privateChat, final QBChatMessage chatMessage) {
-            String body = chatMessage.getBody();
+        public void processMessage(String s, QBChatMessage qbChatMessage, Integer integer) {
+            String body = qbChatMessage.getBody();
             Gson gson = new Gson();
             Message message = gson.fromJson(body, Message.class);
             chatListener.onChatMessageReceived(message);
         }
 
         @Override
-        public void processError(QBPrivateChat privateChat, QBChatException error, QBChatMessage originMessage) {
-            Log.e(TAG, error.getMessage());
+        public void processError(String s, QBChatException e, QBChatMessage qbChatMessage, Integer integer) {
+            Log.e(TAG, "Could not process message", e);
         }
     };
 
@@ -151,20 +159,14 @@ public abstract class QuickBloxChatClient implements RobotChatClient, DriverChat
 
         signalingManager.addSignalingManagerListener((qbSignaling, createdLocally) -> {
             if (!createdLocally) {
-                qbrtcClient.addSignaling((QBWebRTCSignaling) qbSignaling);
+                qbrtcClient.addSignaling(qbSignaling);
             }
         });
     }
 
     private void enableReceivingPrivateChats() {
-        QBPrivateChatManagerListener privateChatManagerListener = (incomingPrivateChat, createdLocally) -> {
-            if (!createdLocally) {
-                privateChat = incomingPrivateChat;
-                privateChat.addMessageListener(privateChatMessageListener);
-            }
-        };
-        QBPrivateChatManager privateChatManager = QBChatService.getInstance().getPrivateChatManager();
-        privateChatManager.addPrivateChatManagerListener(privateChatManagerListener);
+        QBIncomingMessagesManager privateChatManager = QBChatService.getInstance().getIncomingMessagesManager();
+        privateChatManager.addDialogMessageListener(chatMessageListener);
     }
 
     @Override
@@ -181,14 +183,33 @@ public abstract class QuickBloxChatClient implements RobotChatClient, DriverChat
 
     private void startPrivateChat() {
         Integer opponentId = getOpponent().getId();
-        privateChat = QBChatService.getInstance()
-                .getPrivateChatManager()
-                .createChat(opponentId, privateChatMessageListener);
+        QBUser opponent;
+        try {
+            opponent = QBUsers.getUser(opponentId).perform();
+        } catch (QBResponseException e) {
+            Log.e(TAG, "Could not load user", e);
+            return;
+        }
+
+        QBChatDialog dialog = DialogUtils.buildDialog(opponent);
+        QBRestChatService.createChatDialog(dialog)
+                .performAsync(new QBEntityCallback<QBChatDialog>() {
+                    @Override
+                    public void onSuccess(QBChatDialog qbChatDialog, Bundle bundle) {
+                        QuickBloxChatClient.this.chatDialog = qbChatDialog;
+                        qbChatDialog.addMessageListener(chatMessageListener);
+                    }
+
+                    @Override
+                    public void onError(QBResponseException e) {
+                        Log.e(TAG, "Shit, couldn't start a chat", e);
+                    }
+                });
     }
 
     @Override
     public void sendMessage(Message message) {
-        if (privateChat == null) {
+        if(chatDialog == null) {
             startPrivateChat();
         }
         trySendingMessage(message);
@@ -200,7 +221,7 @@ public abstract class QuickBloxChatClient implements RobotChatClient, DriverChat
         try {
             QBChatMessage chatMessage = new QBChatMessage();
             chatMessage.setBody(messageString);
-            privateChat.sendMessage(chatMessage);
+            chatDialog.sendMessage(chatMessage);
         } catch (SmackException.NotConnectedException e) {
             //do nothing
         }
