@@ -7,6 +7,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ToggleButton;
 
+import com.quickblox.videochat.webrtc.BaseSession;
 import com.quickblox.videochat.webrtc.QBRTCSession;
 import com.quickblox.videochat.webrtc.callbacks.QBRTCClientVideoTracksCallbacks;
 import com.quickblox.videochat.webrtc.view.QBRTCVideoTrack;
@@ -75,12 +76,12 @@ public class ControlFragment extends BaseFragment implements QBRTCClientVideoTra
     }
 
     @Override
-    public void onLocalVideoTrackReceive(QBRTCSession qbrtcSession, QBRTCVideoTrack qbrtcVideoTrack) {
+    public void onLocalVideoTrackReceive(BaseSession qbrtcSession, QBRTCVideoTrack qbrtcVideoTrack) {
         //no need to do anything if we are only receiving a stream
     }
 
     @Override
-    public void onRemoteVideoTrackReceive(QBRTCSession qbrtcSession, QBRTCVideoTrack qbrtcVideoTrack, Integer userId) {
+    public void onRemoteVideoTrackReceive(BaseSession qbrtcSession, QBRTCVideoTrack qbrtcVideoTrack, Integer userId) {
         qbrtcVideoTrack.addRenderer(new VideoRenderer(videoView.obtainVideoRenderer(RTCGLVideoView.RendererSurface.MAIN)));
     }
 

@@ -13,10 +13,6 @@ android {
         versionCode 1
         versionName "1.0"
 
-        resValue "string", "quickblox_app_id", qbAppId
-        resValue "string", "quickblox_auth_key", qbAuthKey
-        resValue "string", "quickblox_auth_secret", qbAuthSecret
-
         testInstrumentationRunner 'theokanning.rover.MockTestRunner'
     }
     buildTypes {
@@ -34,6 +30,7 @@ android {
 
 final supportVersion = "25.0.0"
 final daggerVersion = '2.0.1'
+final qbVersion = '3.4.1'
 final dexmakerVersion = '1.2'
 final runnerVersion = '0.4'
 final espressoVersion = '2.2.1'
@@ -51,6 +48,9 @@ dependencies {
     compile "com.android.support:recyclerview-v7:$supportVersion"
     compile "com.android.support:support-v4:$supportVersion"
 
+    compile "com.quickblox:quickblox-android-sdk-chat:$qbVersion"
+    compile "com.quickblox:quickblox-android-sdk-videochat-webrtc:$qbVersion"
+
     compile 'com.google.code.gson:gson:2.4'
     compile "com.google.dagger:dagger:$daggerVersion"
     compile 'com.jakewharton:butterknife:7.0.1'
@@ -58,7 +58,7 @@ dependencies {
     compile "io.reactivex:rxandroid:1.0.1"
     compile 'net.danlew:android.joda:2.8.2'
     compile 'com.github.felHR85:UsbSerial:3.3'
-
+    compile 'com.quickblox:quickblox-android-sdk-chat:3.4.1'
 
     androidTestCompile "com.google.dagger:dagger:$daggerVersion"
     androidTestCompile "com.android.support.test:runner:$runnerVersion"

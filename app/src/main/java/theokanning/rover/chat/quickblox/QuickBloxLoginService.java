@@ -26,15 +26,13 @@ class QuickBloxLoginService {
     boolean login(QBUser user, Context context) {
 
         try {
-            QBAuth.createSession(user);
+            QBAuth.createSession(user).perform();
         } catch (QBResponseException e) {
             e.printStackTrace();
             return false;
         }
 
-        if (!QBChatService.isInitialized()) {
-            QBChatService.init(context);
-        }
+        // if something is wrong here, this used to check if QbChat service was initialized
 
         QBChatService chatService = QBChatService.getInstance();
 

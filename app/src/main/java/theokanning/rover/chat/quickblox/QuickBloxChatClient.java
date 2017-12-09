@@ -1,6 +1,5 @@
 package theokanning.rover.chat.quickblox;
 
-import android.app.Activity;
 import android.content.Context;
 import android.util.Log;
 
@@ -23,7 +22,6 @@ import com.quickblox.videochat.webrtc.callbacks.QBRTCClientSessionCallbacks;
 import com.quickblox.videochat.webrtc.callbacks.QBRTCClientVideoTracksCallbacks;
 
 import org.jivesoftware.smack.SmackException;
-import org.jivesoftware.smack.XMPPException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,11 +29,11 @@ import java.util.List;
 import java.util.Map;
 
 import rx.Observable;
+import theokanning.rover.chat.client.DriverChatClient;
+import theokanning.rover.chat.client.RobotChatClient;
 import theokanning.rover.chat.listener.ChatListener;
 import theokanning.rover.chat.listener.DriverChatListener;
 import theokanning.rover.chat.listener.RobotChatListener;
-import theokanning.rover.chat.client.DriverChatClient;
-import theokanning.rover.chat.client.RobotChatClient;
 import theokanning.rover.chat.model.Message;
 
 /**
@@ -103,7 +101,7 @@ public abstract class QuickBloxChatClient implements RobotChatClient, DriverChat
         }
 
         @Override
-        public void onReceiveHangUpFromUser(QBRTCSession qbrtcSession, Integer integer) {
+        public void onReceiveHangUpFromUser(QBRTCSession qbrtcSession, Integer integer, Map<String, String> map) {
             chatListener.onSessionEnded();
         }
 
@@ -203,7 +201,7 @@ public abstract class QuickBloxChatClient implements RobotChatClient, DriverChat
             QBChatMessage chatMessage = new QBChatMessage();
             chatMessage.setBody(messageString);
             privateChat.sendMessage(chatMessage);
-        } catch (XMPPException | SmackException.NotConnectedException e) {
+        } catch (SmackException.NotConnectedException e) {
             //do nothing
         }
     }

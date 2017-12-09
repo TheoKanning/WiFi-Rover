@@ -23,8 +23,8 @@ local.properties
 .idea/
 *.iml
 
-# The build key password and api key
-gradle.properties
+# The api keys
+qb_config.json
 
 # Log Files
 *.log

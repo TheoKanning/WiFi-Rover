@@ -5,11 +5,10 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.quickblox.core.QBEntityCallbackImpl;
+import com.quickblox.core.QBEntityCallback;
+import com.quickblox.core.exception.QBResponseException;
 import com.quickblox.users.QBUsers;
 import com.quickblox.users.model.QBUser;
-
-import java.util.List;
 
 /**
  * Gives method for creating new QuickBlox accounts, only needs to be used once per account
@@ -28,7 +27,7 @@ public class QuickBloxUserAccountCreator {
      * @param context context in which to show toast message
      */
     public static void addUserToQuickBlox(final QBUser newUser, final Context context) {
-        QBUsers.signUp(newUser, new QBEntityCallbackImpl<QBUser>() {
+        QBUsers.signUp(newUser).performAsync(new QBEntityCallback<QBUser>() {
             @Override
             public void onSuccess(QBUser user, Bundle args) {
                 Log.d(TAG, newUser.getLogin() + " signed up successfully");
@@ -36,11 +35,9 @@ public class QuickBloxUserAccountCreator {
             }
 
             @Override
-            public void onError(List<String> errors) {
+            public void onError(QBResponseException exception) {
                 Toast.makeText(context, newUser.getLogin() + " not signed up", Toast.LENGTH_SHORT).show();
-                for (String error : errors) {
-                    Log.e(TAG, error);
-                }
+                Log.e(TAG, "Could not add user", exception);
             }
         });
     }
